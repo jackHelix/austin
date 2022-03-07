@@ -70,7 +70,7 @@ public class MessageTemplateServiceImpl implements MessageTemplateService {
         Iterable<MessageTemplate> messageTemplates = messageTemplateDao.findAllById(ids);
         messageTemplates.forEach(messageTemplate -> messageTemplate.setIsDeleted(AustinConstant.TRUE));
         for (MessageTemplate messageTemplate : messageTemplates) {
-            if (messageTemplate.getCronTaskId() > 0) {
+            if (messageTemplate.getCronTaskId()!=null && messageTemplate.getCronTaskId() > 0) {
                 cronTaskService.deleteCronTask(messageTemplate.getCronTaskId());
             }
         }
@@ -91,7 +91,7 @@ public class MessageTemplateServiceImpl implements MessageTemplateService {
 
     @Override
     public BasicResultVO startCronTask(Long id) {
-        // 1.修改模板状态
+        // 1.获取消息模板的信息
         MessageTemplate messageTemplate = messageTemplateDao.findById(id).get();
 
         // 2.动态创建或更新定时任务
