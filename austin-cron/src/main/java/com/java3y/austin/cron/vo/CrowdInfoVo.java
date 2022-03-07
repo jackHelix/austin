@@ -1,4 +1,4 @@
-package com.java3y.austin.cron.domain;
+package com.java3y.austin.cron.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,9 +22,14 @@ import java.util.Map;
 public class CrowdInfoVo implements Serializable {
 
     /**
+     * 消息模板Id
+     */
+    private Long messageTemplateId;
+
+    /**
      * 接收者id
      */
-    private String id;
+    private String receiver;
 
     /**
      * 参数信息

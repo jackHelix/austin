@@ -10,6 +10,9 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Task 执行器
@@ -22,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Data
 @Accessors(chain = true)
 @Slf4j
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Task implements Runnable {
 
     @Autowired
@@ -44,7 +49,7 @@ public class Task implements Runnable {
             return;
         }
 
-        // 1.平台通用去重 test
+        // 1.平台通用去重
         deduplicationRuleService.duplication(taskInfo);
 
         // 2. 真正发送消息

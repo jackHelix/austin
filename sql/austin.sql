@@ -58,25 +58,12 @@ CREATE TABLE `sms_record`
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='短信记录信息';
 
+-- 实时类型 短信（无占位符）
+INSERT INTO austin.message_template (id, name, audit_status, flow_id, msg_status, cron_task_id, cron_crowd_path, expect_push_time, id_type, send_channel, template_type, msg_type, msg_content, send_account, creator, updator, auditor, team, proposer, is_deleted, created, updated) VALUES (1, '买一送十活动', 10, '', 10, null, '', '', 30, 30, 20, 20, '{"content":"6666","url":"","title":""}', 10, 'Java3y', 'Java3y', '3y', '公众号Java3y', '三歪', 0, 1646274112, 1646275242);
 
-/*测试短信*/
-INSERT INTO austin.message_template (id, name, audit_status, msg_status, id_type,
-                                     send_channel, template_type, msg_type, msg_content, send_account, creator,
-                                     updator, auditor, team, proposer, is_deleted, created, updated)
-VALUES (1, 'test短信', 10, 10, 30, 30, 10, 10, '{"content":"{$contentValue}"}', 10, 'yyyyc', 'yyyyu', 'yyyyyyz', 'yyyt',
-        'yyyy22', 0, 1636978066, 1636978066);
+-- 实时类型 邮件（无占位符）
+INSERT INTO austin.message_template (id, name, audit_status, flow_id, msg_status, cron_task_id, cron_crowd_path, expect_push_time, id_type, send_channel, template_type, msg_type, msg_content, send_account, creator, updator, auditor, team, proposer, is_deleted, created, updated) VALUES (2, '校招信息', 10, '', 10, null, '', '', 50, 40, 20, 10, '{"content":"你已成功获取到offer","url":"","title":"招聘通知"}', 10, 'Java3y', 'Java3y', '3y', '公众号Java3y', '鸡蛋', 0, 1646274195, 1646274195);
 
-/*测试短信+url链接追踪*/
-INSERT INTO austin.message_template (id, name, audit_status, msg_status, id_type, send_channel, template_type,
-                                     msg_type, msg_content, send_account, creator, updator, auditor,
-                                     team, proposer, is_deleted, created, updated)
-VALUES (2, 'test短信', 10, 10, 30, 30, 10, 20,
-        '{"content":"{$contentValue}","url":"https://gitee.com/zhongfucheng/austin"}', 10, 'yyyyc', 'yyyyu', 'yyyyyyz',
-        'yyyt', 'yyyy22', 0, 1637411536, 1637411536);
+-- 实时类型 短信（有占位符）占位符key 为 content
+INSERT INTO austin.message_template (id, name, audit_status, flow_id, msg_status, cron_task_id, cron_crowd_path, expect_push_time, id_type, send_channel, template_type, msg_type, msg_content, send_account, creator, updator, auditor, team, proposer, is_deleted, created, updated) VALUES (4, '验证码通知', 10, '', 10, null, '', '', 30, 30, 20, 30, '{"content":"{$content}","url":"","title":""}', 10, 'Java3y', 'Java3y', '3y', '公众号Java3y', '孙悟空', 0, 1646275213, 1646275213);
 
-/*测试邮件发送*/
-INSERT INTO austin.message_template (id, name, audit_status, msg_status, id_type, send_channel, template_type,
-                                     msg_type, msg_content, send_account, creator, updator, auditor,
-                                     team, proposer, is_deleted, created, updated)
-VALUES (3, 'test邮件', 10, 10, 50, 40, 20, 10, '{"content":"{$contentValue}","title":"{$title}"}', 10,
-        'yyyyc', 'yyyyu', 'yyyyyyz', 'yyyt', 'yyyy22', 0, 1641546914, 1641546914);
