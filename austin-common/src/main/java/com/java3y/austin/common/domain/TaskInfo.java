@@ -1,6 +1,6 @@
 package com.java3y.austin.common.domain;
 
-import com.java3y.austin.common.dto.ContentModel;
+import com.java3y.austin.common.dto.model.ContentModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -54,6 +54,11 @@ public class TaskInfo {
      * 消息类型
      */
     private Integer msgType;
+
+    /**
+     * 屏蔽类型
+     */
+    private Integer shieldType;
 
     /**
      * 发送文案模型
