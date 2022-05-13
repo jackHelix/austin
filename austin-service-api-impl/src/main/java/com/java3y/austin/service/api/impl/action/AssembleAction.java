@@ -2,6 +2,7 @@ package com.java3y.austin.service.api.impl.action;
 
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Throwables;
@@ -21,6 +22,7 @@ import com.java3y.austin.support.utils.ContentHolderUtil;
 import com.java3y.austin.support.utils.TaskInfoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -31,14 +33,15 @@ import java.util.*;
  * @description 拼装参数
  */
 @Slf4j
-public class AssembleAction implements BusinessProcess {
+@Service
+public class AssembleAction implements BusinessProcess<SendTaskModel> {
 
     @Autowired
     private MessageTemplateDao messageTemplateDao;
 
     @Override
-    public void process(ProcessContext context) {
-        SendTaskModel sendTaskModel = (SendTaskModel) context.getProcessModel();
+    public void process(ProcessContext<SendTaskModel> context) {
+        SendTaskModel sendTaskModel = context.getProcessModel();
         Long messageTemplateId = sendTaskModel.getMessageTemplateId();
 
         try {
@@ -112,7 +115,8 @@ public class AssembleAction implements BusinessProcess {
 
             if (StrUtil.isNotBlank(originValue)) {
                 String resultValue = ContentHolderUtil.replacePlaceHolder(originValue, variables);
-                ReflectUtil.setFieldValue(contentModel, field, resultValue);
+                Object resultObj = JSONUtil.isJsonObj(resultValue) ? JSONUtil.toBean(resultValue, field.getType()) : resultValue;
+                ReflectUtil.setFieldValue(contentModel, field, resultObj);
             }
         }
 

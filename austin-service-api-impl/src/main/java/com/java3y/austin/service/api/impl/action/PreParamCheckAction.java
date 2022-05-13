@@ -9,6 +9,7 @@ import com.java3y.austin.service.api.impl.domain.SendTaskModel;
 import com.java3y.austin.support.pipeline.BusinessProcess;
 import com.java3y.austin.support.pipeline.ProcessContext;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,11 +20,12 @@ import java.util.stream.Collectors;
  * @description 前置参数校验
  */
 @Slf4j
-public class PreParamCheckAction implements BusinessProcess {
+@Service
+public class PreParamCheckAction implements BusinessProcess<SendTaskModel> {
 
     @Override
-    public void process(ProcessContext context) {
-        SendTaskModel sendTaskModel = (SendTaskModel) context.getProcessModel();
+    public void process(ProcessContext<SendTaskModel> context) {
+        SendTaskModel sendTaskModel = context.getProcessModel();
 
         Long messageTemplateId = sendTaskModel.getMessageTemplateId();
         List<MessageParam> messageParamList = sendTaskModel.getMessageParamList();

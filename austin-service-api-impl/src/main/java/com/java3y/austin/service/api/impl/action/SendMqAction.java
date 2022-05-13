@@ -13,13 +13,15 @@ import com.java3y.austin.support.utils.KafkaUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 /**
  * @author 3y
  * 将消息发送到MQ
  */
 @Slf4j
-public class SendMqAction implements BusinessProcess {
+@Service
+public class SendMqAction implements BusinessProcess<SendTaskModel> {
 
     @Autowired
     private KafkaUtils kafkaUtils;
@@ -28,8 +30,8 @@ public class SendMqAction implements BusinessProcess {
     private String topicName;
 
     @Override
-    public void process(ProcessContext context) {
-        SendTaskModel sendTaskModel = (SendTaskModel) context.getProcessModel();
+    public void process(ProcessContext<SendTaskModel> context) {
+        SendTaskModel sendTaskModel = context.getProcessModel();
         String message = JSON.toJSONString(sendTaskModel.getTaskInfo(), new SerializerFeature[]{SerializerFeature.WriteClassName});
 
         try {
