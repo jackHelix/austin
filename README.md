@@ -1,4 +1,5 @@
-![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2ccd794db76e482680f72d60959cf368~tplv-k3u1fbpfcp-zoom-1.image)
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/108bca55a5364a73b3fd50b8bde304d1~tplv-k3u1fbpfcp-watermark.image?)
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/Author-3y-orange.svg" alt="作者"></a>
@@ -8,8 +9,13 @@
   <a href="https://github.com/ZhongFuCheng3y/austin"><img src="https://img.shields.io/github/stars/ZhongFuCheng3y/austin.svg?style=flat&label=GithubStars"></a>
   <a href="https://github.com/ZhongFuCheng3y/austin-admin"><img src="https://img.shields.io/badge/austin前端-GitHub-green.svg" alt="作者"></a>
   <a href="#项目交流"><img src="https://img.shields.io/badge/项目-交流-red.svg" alt="项目交流"></a>
+  <a href="https://space.bilibili.com/198434865/channel/collectiondetail?sid=435119"><img src="https://img.shields.io/badge/项目-视频-green.svg" alt="Bilibili"></a>
   <a href="#如何准备面试"><img src="https://img.shields.io/badge/如何准备-面试-yellow.svg" alt="对线面试官"></a>
 </p>
+
+最近我已经在**bilibili**更新Austin的视频了哟，**求关注和三连**！这是我更新的动力！！
+
+[https://space.bilibili.com/198434865/channel/collectiondetail?sid=435119](https://space.bilibili.com/198434865/channel/collectiondetail?sid=435119)
 
 
 
@@ -54,12 +60,10 @@ austin项目**核心流程**：`austin-api`接收到发送消息请求，直接�
 
 ## 使用姿势
 
-目前引用的中间件教程的安装姿势均基于`Centos 7.6`(**完全部署所有的服务，大概8G内存**)，austin项目**强依赖**`MySQL`/`Redis`/`Kafka`/`apollo`，**弱依赖**`prometheus`/`graylog`/`flink`/`xxl-job`。如果缺少相关的组件可戳：[安装相关组件教程](INSTALL.md)。
-
+目前引用的中间件教程的安装姿势均基于`Centos 7.6`，austin项目**强依赖**`MySQL`/`Redis`/(**大概需要2G内存**)，**弱依赖**`kafka`/`prometheus`/`graylog`/`flink`/`xxl-job`/`apollo`(**完全部署所有的服务，大概8G+内存**)。如果缺少相关的组件可戳：[安装相关组件教程](INSTALL.md)。
 
 
 > 实在想要`clone`项目后不用自己部署环境直接在本地启动`debug`，我这提供了[会员服务](https://mp.weixin.qq.com/s?__biz=MzI4Njg5MDA5NA==&mid=2247505577&idx=1&sn=5114f8f583755899c2946fbea0b22e4b&chksm=ebd497a8dca31ebe8f98344483a00c860863dfc3586e51eed95b25988151427fee8101311f4f&token=735778370&lang=zh_CN#rd)，**直连**部署好的服务器
-
 
 
 **1**、austin使用的MySQL版本**5.7x**。如果目前使用的MySQL版本8.0，注意改变`pom.xml`所依赖的版本
@@ -68,19 +72,17 @@ austin项目**核心流程**：`austin-api`接收到发送消息请求，直接�
 
 **3**、执行`sql`文件夹下的`austin.sql`创建对应的表以及插入测试数据
 
-**4**、填写`application.properties`中`austin-kafka`对应的`ip`/`port`信息
+**4**、如果配置`austin.mq.pipeline=kafka`，需要填写`application.properties`中`austin.kafka`对应的`ip`/`port`信息
 
-**5**、填写`application.properties`中`austin-redis`对应的`ip`/`port`信息
+**5**、填写`application.properties`中`austin.redis`对应的`ip`/`port`信息
 
-**6**、检查`apollo`的`app.id`/`apollo.bootstrap.namespaces`，检查创建的消息队列topic：`austin.business.topic.name`
+**6**、检查消息队列topic：`austin.business.topic.name`(我的topicName为：austinBusiness)
 
-**7**、以上配置信息都在`application.properties`文件中修改。
+**7**、以上配置信息都在`application.properties`文件中修改。(`prometheus`/`graylog`/`flink`/`xxl-job`/`apollo`可选)
 
-**8**、由于使用了Apollo且我是在云服务器上安装的，我这边会直接跳过`metaserver`服务发现，在`AustinApplication`需要配置对应的apollo地址(注意端口!)
+**8**、发送渠道**账号的信息**都配置在**local.properties**，配置的示例参照`com.java3y.austin.support.utils#getAccount`中的注释
 
-**9**、发送渠道**账号的信息**都配置在**apollo**，配置的示例参照`com.java3y.austin.support.utils#getAccount`中的注释
-
-**10**、调用http接口`com.java3y.austin.web.controller#send`给自己发一条短信或者邮件感受
+**10**、调用http接口`com.java3y.austin.web.controller#send`给自己发一条邮件或短信感受(**邮件门槛相对较低，建议配置邮件**)
 
 ```shell
 curl -XPOST "127.0.0.1:8080/send"  -H 'Content-Type: application/json'  -d '{"code":"send","messageParam":{"extra":null,"receiver":"13719333899"},"messageTemplateId":1}'
@@ -96,13 +98,15 @@ curl -XPOST "127.0.0.1:8080/send"  -H 'Content-Type: application/json'  -d '{"co
 
 ![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/01d028359e6e4229825a7fd8cc22c6c7~tplv-k3u1fbpfcp-zoom-1.image)
 
-**12**、正常使用**数据管理**(查看实时数据链路下发)需要将`austin-stream`的`jar`包上传至`Flink`，根据[部署文档](INSTALL.md)启动Flink。在打`jar`包前需要填写`com.java3y.austin.stream.constants.AustinFlinkConstant`中的`redis`和`kafka`的`ip/port`（注：日志的topic在`application.properties`中的`austin.business.log.topic.name`。如果没有该topic，需要提前创建)
+**12**、正常使用**数据管理**(查看实时数据链路下发)需要将`austin-stream`的`jar`包上传至`Flink`，根据[部署文档](INSTALL.md)启动Flink。在打`jar`包前需要填写`com.java3y.austin.stream.constants.AustinFlinkConstant`中的`redis`和`kafka`的`ip/port`（注：日志的topic在`application.properties`中的`austin.business.log.topic.name`。如果没有该topic，需要提前创建，并使用Kafka作为消息队列实现)
 
-**13**、正常使用**定时任务**需要部署`xxl-job`，根据[部署文档](INSTALL.md)启动xxl的调度中心，并在`application.properteis`中填写  `austin-xxl-job-ip`和`austin-xxl-job-port`
+**13**、正常使用**定时任务**需要部署`xxl-job`，根据[部署文档](INSTALL.md)启动xxl的调度中心，并在`application.properteis`中填写  `austin.xxl.job.ip`和`austin.xxl.job.port`
 
-**14**、正常使用**分布式日志采集**需要部署`graylog`，根据[部署文档](INSTALL.md)启动`graylog`，并在`application.properteis`中填写  `austin-grayLog-ip`
+**14**、正常使用**分布式日志采集**需要部署`graylog`，根据[部署文档](INSTALL.md)启动`graylog`，并在`application.properteis`中填写  `austin.grayLog.ip`
 
 **14**、正常使用**系统监控**需要部署`promethus`和`grafana`，根据[部署文档](INSTALL.md)配置`grafana`图表
+
+**15**、正常使用**动态配置中心**需要部署`apollo`，根据[部署文档](INSTALL.md)启动`apollo`,通过docker-compose启动需要在AustinApplication注入对应的ip和port(可看注释)
 
 ## 会员服务
 
@@ -116,9 +120,30 @@ curl -XPOST "127.0.0.1:8080/send"  -H 'Content-Type: application/json'  -d '{"co
 
 3、项目在编写的过程中也经历多次的重构迭代，迭代的内容我是不会将以往文章内容重新修正发布，但语雀的文档内容一定是**及时同步**，文档跟代码是保持一致的
 
-4、除了项目，还可以问我些学习经验、学习路线、简历编写、面试经验等等问题，技术和学习上的知识**知无不言**
+4、干练清爽的项目commit，可一步一步跟着commit还原整个系统的过程
 
-详情可以看戳：[我开通了付费渠道](https://mp.weixin.qq.com/s?__biz=MzI4Njg5MDA5NA==&mid=2247505577&idx=1&sn=5114f8f583755899c2946fbea0b22e4b&chksm=ebd497a8dca31ebe8f98344483a00c860863dfc3586e51eed95b25988151427fee8101311f4f&token=319992632&lang=zh_CN#rd)
+5、除了项目，还可以问我些学习经验、学习路线、简历编写、面试经验等等问题，技术和学习上的知识**知无不言**
+
+详情可以看戳：[我开通了付费渠道](https://mp.weixin.qq.com/s?__biz=MzI4Njg5MDA5NA==&mid=2247507166&idx=1&sn=d4437089c2db18b90a6d3ec742380554&chksm=ebd49ddfdca314c94d49a02da2ecb1358ac08d86616b6f1fce34720cc96e81d3006a51e86beb&token=28465847&lang=zh_CN#rd)
+
+
+## 项目交流
+
+由于austin项目交流群已经超过了两百人，添加我的**个人微信**备注：【**项目**】，我空的时候会拉进项目交流群里
+
+
+<img align="center" src='https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/60efe6b0f4354b838244b96a15efdf49~tplv-k3u1fbpfcp-watermark.image' width=300px height=300px />
+
+## 如何准备面试？
+
+**对线面试官**公众号持续更新**面试系列**文章（对线面试官系列），深受各大开发的好评，已有不少的同学通过对线面试官系列得到BATTMD等一线大厂的的offer。一个**讲人话的面试系列**，八股文不再是背诵。
+
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c4a6cae132244355b9da6bd74d38d1ee~tplv-k3u1fbpfcp-zoom-1.image)
+
+想要获取这份电子书，**点击关注**下方公众号，回复「**对线**」得到我的联系方式即可进群获取电子书
+
+<img align="center" src='https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f87f574e93964921a4d02146bf3ccdac~tplv-k3u1fbpfcp-zoom-1.image' width=300px height=300px />
 
 ## 里程碑
 
@@ -148,27 +173,14 @@ curl -XPOST "127.0.0.1:8080/send"  -H 'Content-Type: application/json'  -d '{"co
 - [x] 接入微信服务号渠道(已有pull request代码)
 - [x] 接入微信小程序渠道(已有pull request代码)
 - [x] 接入PUSH渠道
+- [x] 接入云片短信渠道，并短信支持流量配置，拉取腾讯云短信回执
+- [x] 完成接入钉钉机器人渠道所有类型的消息
+- [x] 完成接入钉钉工作渠道所有类型的消息，包括对文件素材的上传功能
+- [x] Kafka消息支持tag过滤
+- [x] MQ层支持可插拔，默认使用eventbus单机队列，Kafka变为弱依赖
 - [ ] 总体架构已完成，持续做基础建设和优化代码
 
 
-**近期更新时间**：5月9号
+**近期更新时间**：7月11号
 
-**近期更新功能**：接入个推PUSH，安卓发送推送消息
-
-## 项目交流
-
-欢迎扫描下方二维码添加我的**个人微信**备注：【**项目**】，我会空闲的时候拉进项目交流群（群里会解答相关的问题）
-
-
-<img align="center" src='https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5eae548196934599a7cb3637aedf381d~tplv-k3u1fbpfcp-zoom-1.image' width=300px height=300px />
-
-## 如何准备面试？
-
-**对线面试官**公众号持续更新**面试系列**文章（对线面试官系列），深受各大开发的好评，已有不少的同学通过对线面试官系列得到BATTMD等一线大厂的的offer。一个**讲人话的面试系列**，八股文不再是背诵。
-
-
-![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c4a6cae132244355b9da6bd74d38d1ee~tplv-k3u1fbpfcp-zoom-1.image)
-
-想要获取这份电子书，**点击关注**下方公众号，回复「**对线**」得到我的联系方式即可进群获取电子书
-
-<img align="center" src='https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f87f574e93964921a4d02146bf3ccdac~tplv-k3u1fbpfcp-zoom-1.image' width=300px height=300px />
+**近期更新功能**：MQ层可插拔重构

@@ -49,6 +49,18 @@ public class SendAccountConstant {
     public static final String DING_DING_ROBOT_PREFIX = "ding_ding_robot_";
 
     /**
+     * 企业微信群机器人 账号
+     */
+    public static final String ENTERPRISE_WECHAT_ROBOT_ACCOUNT_KEY = "enterpriseWechatAccountRobot";
+    public static final String ENTERPRISE_WECHAT_ROBOT_PREFIX = "enterprise_wechat_robot_";
+
+    /**
+     * 飞书群机器人 账号
+     */
+    public static final String FEI_SHU_ROBOT_ACCOUNT_KEY = "feiShuAccountRobot";
+    public static final String FEI_SHU_ROBOT_PREFIX = "fei_shu_robot_";
+
+    /**
      * 企业微信 应用消息 账号
      */
     public static final String ENTERPRISE_WECHAT_ACCOUNT_KEY = "enterpriseWechatAccount";
@@ -71,6 +83,13 @@ public class SendAccountConstant {
      */
     public static final String SMS_ACCOUNT_KEY = "smsAccount";
     public static final String SMS_PREFIX = "sms_";
+
+
+    /**
+     * 短信账号code
+     */
+    public static final Integer TENCENT_SMS_CODE = 10;
+    public static final Integer YUN_PIAN_SMS_CODE = 20;
 
 
 }

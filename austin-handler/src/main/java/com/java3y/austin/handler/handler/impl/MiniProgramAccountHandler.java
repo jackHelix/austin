@@ -4,14 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.base.Throwables;
 import com.java3y.austin.common.domain.TaskInfo;
 import com.java3y.austin.common.dto.model.MiniProgramContentModel;
-import com.java3y.austin.common.dto.model.OfficialAccountsContentModel;
 import com.java3y.austin.common.enums.ChannelType;
 import com.java3y.austin.handler.domain.wechat.WeChatMiniProgramParam;
-import com.java3y.austin.handler.domain.wechat.WeChatOfficialParam;
 import com.java3y.austin.handler.handler.BaseHandler;
 import com.java3y.austin.handler.handler.Handler;
-import com.java3y.austin.handler.script.MiniProgramAccountService;
-import com.java3y.austin.handler.script.OfficialAccountService;
+import com.java3y.austin.handler.wechat.MiniProgramAccountService;
+import com.java3y.austin.support.domain.MessageTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -62,6 +60,9 @@ public class MiniProgramAccountHandler extends BaseHandler implements Handler {
         miniProgramParam.setData(contentModel.getMap());
         return miniProgramParam;
     }
+    @Override
+    public void recall(MessageTemplate messageTemplate) {
 
+    }
 }
 

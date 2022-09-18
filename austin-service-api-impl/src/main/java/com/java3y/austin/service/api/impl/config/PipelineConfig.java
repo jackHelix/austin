@@ -49,10 +49,21 @@ public class PipelineConfig {
     }
 
     /**
+     * 消息撤回执行流程
+     * 1.组装参数
+     * 2.发送MQ
+     * @return
+     */
+    @Bean("recallMessageTemplate")
+    public ProcessTemplate recallMessageTemplate() {
+        ProcessTemplate processTemplate = new ProcessTemplate();
+        processTemplate.setProcessList(Arrays.asList(assembleAction, sendMqAction));
+        return processTemplate;
+    }
+
+    /**
      * pipeline流程控制器
-     * 目前暂定只有 普通发送的流程
      * 后续扩展则加BusinessCode和ProcessTemplate
-     *
      * @return
      */
     @Bean
@@ -60,6 +71,7 @@ public class PipelineConfig {
         ProcessController processController = new ProcessController();
         Map<String, ProcessTemplate> templateConfig = new HashMap<>(4);
         templateConfig.put(BusinessCode.COMMON_SEND.getCode(), commonSendTemplate());
+        templateConfig.put(BusinessCode.RECALL.getCode(), recallMessageTemplate());
         processController.setTemplateConfig(templateConfig);
         return processController;
     }

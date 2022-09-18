@@ -35,6 +35,10 @@ public class ShieldServiceImpl implements ShieldService {
     @Override
     public void shield(TaskInfo taskInfo) {
 
+        if (ShieldType.NIGHT_NO_SHIELD.getCode().equals(taskInfo.getShieldType())) {
+            return;
+        }
+
         /**
          * example:当消息下发至austin平台时，已经是凌晨1点，业务希望此类消息在次日的早上9点推送
          * (配合 分布式任务定时任务框架搞掂)
@@ -46,7 +50,7 @@ public class ShieldServiceImpl implements ShieldService {
             }
             if (ShieldType.NIGHT_SHIELD_BUT_NEXT_DAY_SEND.getCode().equals(taskInfo.getShieldType())) {
                 redisUtils.lPush(NIGHT_SHIELD_BUT_NEXT_DAY_SEND_KEY, JSON.toJSONString(taskInfo,
-                        new SerializerFeature[]{SerializerFeature.WriteClassName}),
+                        SerializerFeature.WriteClassName),
                         (DateUtil.offsetDay(new Date(), 1).getTime() / 1000) - DateUtil.currentSeconds());
                 logUtils.print(AnchorInfo.builder().state(AnchorState.NIGHT_SHIELD_NEXT_SEND.getCode()).businessId(taskInfo.getBusinessId()).ids(taskInfo.getReceiver()).build());
             }
