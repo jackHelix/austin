@@ -4,10 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.ctrip.framework.apollo.Config;
-import com.ctrip.framework.apollo.spring.annotation.ApolloConfig;
 import com.google.common.base.Throwables;
-import com.java3y.austin.common.constant.AustinConstant;
+import com.java3y.austin.common.constant.CommonConstant;
 import com.java3y.austin.common.domain.TaskInfo;
 import com.java3y.austin.common.dto.model.SmsContentModel;
 import com.java3y.austin.common.enums.ChannelType;
@@ -15,7 +13,7 @@ import com.java3y.austin.handler.domain.sms.MessageTypeSmsConfig;
 import com.java3y.austin.handler.domain.sms.SmsParam;
 import com.java3y.austin.handler.handler.BaseHandler;
 import com.java3y.austin.handler.handler.Handler;
-import com.java3y.austin.handler.script.SmsScriptHolder;
+import com.java3y.austin.handler.script.SmsScript;
 import com.java3y.austin.support.dao.SmsRecordDao;
 import com.java3y.austin.support.domain.MessageTemplate;
 import com.java3y.austin.support.domain.SmsRecord;
@@ -25,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -44,11 +43,13 @@ public class SmsHandler extends BaseHandler implements Handler {
     private SmsRecordDao smsRecordDao;
 
     @Autowired
-    private SmsScriptHolder smsScriptHolder;
-
-    @Autowired
     private ConfigService config;
 
+    @Autowired
+    private Map<String, SmsScript> smsScripts;
+
+    private static final String FLOW_KEY = "msgTypeSmsConfig";
+    private static final String FLOW_KEY_PREFIX = "message_type_";
 
     @Override
     public boolean handler(TaskInfo taskInfo) {
@@ -64,15 +65,15 @@ public class SmsHandler extends BaseHandler implements Handler {
              */
             MessageTypeSmsConfig[] messageTypeSmsConfigs = loadBalance(getMessageTypeSmsConfig(taskInfo.getMsgType()));
             for (MessageTypeSmsConfig messageTypeSmsConfig : messageTypeSmsConfigs) {
-                List<SmsRecord> recordList = smsScriptHolder.route(messageTypeSmsConfig.getScriptName()).send(smsParam);
+                smsParam.setScriptName(messageTypeSmsConfig.getScriptName());
+                List<SmsRecord> recordList = smsScripts.get(messageTypeSmsConfig.getScriptName()).send(smsParam);
                 if (CollUtil.isNotEmpty(recordList)) {
                     smsRecordDao.saveAll(recordList);
                     return true;
                 }
             }
         } catch (Exception e) {
-            log.error("SmsHandler#handler fail:{},params:{}",
-                    Throwables.getStackTraceAsString(e), JSON.toJSONString(smsParam));
+            log.error("SmsHandler#handler fail:{},params:{}", Throwables.getStackTraceAsString(e), JSON.toJSONString(smsParam));
         }
         return false;
     }
@@ -127,14 +128,10 @@ public class SmsHandler extends BaseHandler implements Handler {
      * @return
      */
     private List<MessageTypeSmsConfig> getMessageTypeSmsConfig(Integer msgType) {
-
-        String apolloKey = "msgTypeSmsConfig";
-        String messagePrefix = "message_type_";
-
-        String property = config.getProperty(apolloKey, AustinConstant.APOLLO_DEFAULT_VALUE_JSON_ARRAY);
+        String property = config.getProperty(FLOW_KEY, CommonConstant.EMPTY_VALUE_JSON_ARRAY);
         JSONArray jsonArray = JSON.parseArray(property);
         for (int i = 0; i < jsonArray.size(); i++) {
-            JSONArray array = jsonArray.getJSONObject(i).getJSONArray(messagePrefix + msgType);
+            JSONArray array = jsonArray.getJSONObject(i).getJSONArray(FLOW_KEY_PREFIX + msgType);
             if (CollUtil.isNotEmpty(array)) {
                 List<MessageTypeSmsConfig> result = JSON.parseArray(JSON.toJSONString(array), MessageTypeSmsConfig.class);
                 return result;
@@ -152,7 +149,7 @@ public class SmsHandler extends BaseHandler implements Handler {
     private String getSmsContent(TaskInfo taskInfo) {
         SmsContentModel smsContentModel = (SmsContentModel) taskInfo.getContentModel();
         if (StrUtil.isNotBlank(smsContentModel.getUrl())) {
-            return smsContentModel.getContent() + " " + smsContentModel.getUrl();
+            return smsContentModel.getContent() + StrUtil.SPACE + smsContentModel.getUrl();
         } else {
             return smsContentModel.getContent();
         }
