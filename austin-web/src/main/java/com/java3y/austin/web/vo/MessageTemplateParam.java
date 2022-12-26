@@ -24,18 +24,23 @@ public class MessageTemplateParam {
      * 当前页码
      */
     @NotNull
-    private Integer page;
+    private Integer page = 1;
 
     /**
      * 当前页大小
      */
     @NotNull
-    private Integer perPage;
+    private Integer perPage = 10;
 
     /**
      * 模板ID
      */
     private Long id;
+
+    /**
+     * 当前用户
+     */
+    private String creator;
 
     /**
      * 消息接收者(测试发送时使用)
@@ -46,4 +51,9 @@ public class MessageTemplateParam {
      * 下发参数信息
      */
     private String msgContent;
+
+    /**
+     * 模版名称
+     */
+    private String keywords;
 }

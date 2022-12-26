@@ -5,7 +5,6 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.base.Throwables;
-import com.java3y.austin.common.constant.AustinConstant;
 import com.java3y.austin.common.enums.RespStatusEnum;
 import com.java3y.austin.common.vo.BasicResultVO;
 import com.java3y.austin.service.api.domain.MessageParam;
@@ -16,14 +15,17 @@ import com.java3y.austin.service.api.service.RecallService;
 import com.java3y.austin.service.api.service.SendService;
 import com.java3y.austin.support.domain.MessageTemplate;
 import com.java3y.austin.web.service.MessageTemplateService;
-import com.java3y.austin.web.utils.ConvertMap;
+import com.java3y.austin.web.utils.Convert4Amis;
+import com.java3y.austin.web.utils.LoginUtils;
 import com.java3y.austin.web.vo.MessageTemplateParam;
 import com.java3y.austin.web.vo.MessageTemplateVo;
+import com.java3y.austin.web.vo.amis.CommonAmisVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,7 +46,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/messageTemplate")
 @Api("发送消息")
-@CrossOrigin(origins = AustinConstant.ORIGIN_VALUE, allowCredentials = "true", allowedHeaders = "*")
 public class MessageTemplateController {
 
     @Autowired
@@ -56,6 +57,9 @@ public class MessageTemplateController {
     @Autowired
     private RecallService recallService;
 
+    @Autowired
+    private LoginUtils loginUtils;
+
     @Value("${austin.business.upload.crowd.path}")
     private String dataPath;
 
@@ -66,6 +70,9 @@ public class MessageTemplateController {
     @PostMapping("/save")
     @ApiOperation("/保存数据")
     public BasicResultVO saveOrUpdate(@RequestBody MessageTemplate messageTemplate) {
+        if (loginUtils.needLogin() && StrUtil.isBlank(messageTemplate.getCreator())) {
+            return BasicResultVO.fail(RespStatusEnum.NO_LOGIN);
+        }
         MessageTemplate info = messageTemplateService.saveOrUpdate(messageTemplate);
         return BasicResultVO.success(info);
     }
@@ -76,10 +83,12 @@ public class MessageTemplateController {
     @GetMapping("/list")
     @ApiOperation("/列表页")
     public BasicResultVO queryList(@Validated MessageTemplateParam messageTemplateParam) {
-        List<Map<String, Object>> result = ConvertMap.flatList(messageTemplateService.queryList(messageTemplateParam));
-
-        long count = messageTemplateService.count();
-        MessageTemplateVo messageTemplateVo = MessageTemplateVo.builder().count(count).rows(result).build();
+        if (loginUtils.needLogin() && StrUtil.isBlank(messageTemplateParam.getCreator())) {
+            return BasicResultVO.fail(RespStatusEnum.NO_LOGIN);
+        }
+        Page<MessageTemplate> messageTemplates = messageTemplateService.queryList(messageTemplateParam);
+        List<Map<String, Object>> result = Convert4Amis.flatListMap(messageTemplates.toList());
+        MessageTemplateVo messageTemplateVo = MessageTemplateVo.builder().count(messageTemplates.getTotalElements()).rows(result).build();
         return BasicResultVO.success(messageTemplateVo);
     }
 
@@ -89,7 +98,7 @@ public class MessageTemplateController {
     @GetMapping("query/{id}")
     @ApiOperation("/根据Id查找")
     public BasicResultVO queryById(@PathVariable("id") Long id) {
-        Map<String, Object> result = ConvertMap.flatSingle(messageTemplateService.queryById(id));
+        Map<String, Object> result = Convert4Amis.flatSingleMap(messageTemplateService.queryById(id));
         return BasicResultVO.success(result);
     }
 
@@ -136,6 +145,21 @@ public class MessageTemplateController {
         }
         return BasicResultVO.success(response);
     }
+
+    /**
+     * 获取需要测试的模板占位符，透出给Amis
+     */
+    @PostMapping("test/content")
+    @ApiOperation("/测试发送接口")
+    public BasicResultVO test(Long id) {
+        MessageTemplate messageTemplate = messageTemplateService.queryById(id);
+        CommonAmisVo commonAmisVo = Convert4Amis.getTestContent(messageTemplate.getMsgContent());
+        if (commonAmisVo != null) {
+            return BasicResultVO.success(commonAmisVo);
+        }
+        return BasicResultVO.success();
+    }
+
 
     /**
      * 撤回接口
@@ -188,8 +212,6 @@ public class MessageTemplateController {
                 localFile.mkdirs();
             }
             file.transferTo(localFile);
-
-
         } catch (Exception e) {
             log.error("MessageTemplateController#upload fail! e:{},params{}", Throwables.getStackTraceAsString(e), JSON.toJSONString(file));
             return BasicResultVO.fail(RespStatusEnum.SERVICE_ERROR);

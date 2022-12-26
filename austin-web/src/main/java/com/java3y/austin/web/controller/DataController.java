@@ -1,7 +1,6 @@
 package com.java3y.austin.web.controller;
 
 import cn.hutool.core.util.StrUtil;
-import com.java3y.austin.common.constant.AustinConstant;
 import com.java3y.austin.common.enums.RespStatusEnum;
 import com.java3y.austin.common.vo.BasicResultVO;
 import com.java3y.austin.web.service.DataService;
@@ -15,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+
 /**
  * 获取数据接口（全链路追踪)
  *
@@ -24,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/trace")
 @Api("获取数据接口（全链路追踪)")
-@CrossOrigin(origins = AustinConstant.ORIGIN_VALUE, allowCredentials = "true", allowedHeaders = "*")
 public class DataController {
     @Autowired
     private DataService dataService;
@@ -50,8 +50,8 @@ public class DataController {
     @PostMapping("/sms")
     @ApiOperation("/获取短信下发数据")
     public BasicResultVO getSmsData(@RequestBody DataParam dataParam) {
-        if (dataParam == null || dataParam.getDateTime() == null || dataParam.getReceiver() == null) {
-            return new BasicResultVO<>(RespStatusEnum.SUCCESS, new SmsTimeLineVo());
+        if (dataParam == null || dataParam.getDateTime() == null || StrUtil.isBlank(dataParam.getReceiver())) {
+            return new BasicResultVO<>(RespStatusEnum.SUCCESS, SmsTimeLineVo.builder().items(new ArrayList<>()).build());
         }
 
         SmsTimeLineVo smsTimeLineVo = dataService.getTraceSmsInfo(dataParam);

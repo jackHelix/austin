@@ -1,5 +1,9 @@
 package com.java3y.austin.common.constant;
 
+
+/**
+ * @author 3y
+ */
 public class CommonConstant {
 
     public final static String PERIOD = ".";
@@ -44,6 +48,14 @@ public class CommonConstant {
     public static final String CHARSET_NAME = "UTF-8";
 
     /**
+     * HTTP请求内容格式
+     */
+    public static final String CONTENT_TYPE_JSON = "application/json; charset=utf-8";
+    public static final String CONTENT_TYPE_TEXT = "text/html;charset=utf-8";
+    public static final String CONTENT_TYPE_XML = "application/xml; charset=UTF-8";
+    public static final String CONTENT_TYPE_FORM_URL_ENCODE = "application/x-www-form-urlencoded;charset=utf-8;";
+
+    /**
      * HTTP 请求方法
      */
     public static final String REQUEST_METHOD_GET = "GET";
@@ -59,5 +71,15 @@ public class CommonConstant {
      * cron时间格式
      */
     public final static String CRON_FORMAT = "ss mm HH dd MM ? yyyy-yyyy";
+
+    /**
+     * 环境常量
+     */
+    public final static String ENV_DEV = "dev";
+    public final static String ENV_TEST = "test";
+
+
+
+
 
 }
