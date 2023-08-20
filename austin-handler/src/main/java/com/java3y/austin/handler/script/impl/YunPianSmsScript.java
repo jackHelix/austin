@@ -4,6 +4,7 @@ import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.URLUtil;
 import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSON;
@@ -16,21 +17,26 @@ import com.java3y.austin.handler.domain.sms.YunPianSendResult;
 import com.java3y.austin.handler.script.SmsScript;
 import com.java3y.austin.support.domain.SmsRecord;
 import com.java3y.austin.support.utils.AccountUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author 3y
  * @date 2022年5月23日
  * 发送短信接入文档：https://www.yunpian.com/official/document/sms/zh_CN/domestic_list
  */
-@Slf4j
 @Component("YunPianSmsScript")
 public class YunPianSmsScript implements SmsScript {
+
+    private static final String PARAMS_SPLIT_KEY = "{|}";
+    private static final String PARAMS_KV_SPLIT_KEY = "{:}";
+    private static Logger log = LoggerFactory.getLogger(YunPianSmsScript.class);
     @Autowired
     private AccountUtils accountUtils;
 
@@ -38,7 +44,8 @@ public class YunPianSmsScript implements SmsScript {
     public List<SmsRecord> send(SmsParam smsParam) {
 
         try {
-            YunPianSmsAccount account = accountUtils.getSmsAccountByScriptName(smsParam.getScriptName(), YunPianSmsAccount.class);
+            YunPianSmsAccount account = Objects.nonNull(smsParam.getSendAccountId()) ? accountUtils.getAccountById(smsParam.getSendAccountId(), YunPianSmsAccount.class)
+                    : accountUtils.getSmsAccountByScriptName(smsParam.getScriptName(), YunPianSmsAccount.class);
             Map<String, Object> params = assembleParam(smsParam, account);
 
             String result = HttpRequest.post(account.getUrl())
@@ -57,8 +64,7 @@ public class YunPianSmsScript implements SmsScript {
     }
 
     @Override
-    public List<SmsRecord> pull(String scriptName) {
-        YunPianSmsAccount account = accountUtils.getSmsAccountByScriptName(scriptName, YunPianSmsAccount.class);
+    public List<SmsRecord> pull(Integer accountId) {
         // .....
         return null;
     }
@@ -75,13 +81,13 @@ public class YunPianSmsScript implements SmsScript {
         params.put("apikey", account.getApikey());
         params.put("mobile", StringUtils.join(smsParam.getPhones(), StrUtil.C_COMMA));
         params.put("tpl_id", account.getTplId());
-        params.put("tpl_value", "");
+        params.put("tpl_value", getTplValue(smsParam));
         return params;
     }
 
 
     private List<SmsRecord> assembleSmsRecord(SmsParam smsParam, YunPianSendResult response, YunPianSmsAccount account) {
-        if (response == null || ArrayUtil.isEmpty(response.getData())) {
+        if (Objects.isNull(response) || ArrayUtil.isEmpty(response.getData())) {
             return null;
         }
 
@@ -97,7 +103,7 @@ public class YunPianSmsScript implements SmsScript {
                     .msgContent(smsParam.getContent())
                     .seriesId(datum.getSid())
                     .chargingNum(Math.toIntExact(datum.getCount()))
-                    .status(CommonConstant.ZERO.equals(datum.getCode()) ? SmsStatus.SEND_SUCCESS.getCode() : SmsStatus.SEND_FAIL.getCode())
+                    .status(0 == datum.getCode() ? SmsStatus.SEND_SUCCESS.getCode() : SmsStatus.SEND_FAIL.getCode())
                     .reportContent(datum.getMsg())
                     .created(Math.toIntExact(DateUtil.currentSeconds()))
                     .updated(Math.toIntExact(DateUtil.currentSeconds()))
@@ -107,6 +113,18 @@ public class YunPianSmsScript implements SmsScript {
         }
 
         return smsRecordList;
+    }
+
+
+    private String getTplValue(SmsParam smsParam) {
+        String tplValue = "";
+        if (StrUtil.isNotBlank(smsParam.getContent())) {
+            tplValue = StrUtil.split(smsParam.getContent(), PARAMS_SPLIT_KEY).stream().map(item -> {
+                List<String> kv = StrUtil.splitTrim(item, PARAMS_KV_SPLIT_KEY, 2);
+                return String.join("=", URLUtil.encodeQuery(kv.get(0)), URLUtil.encodeQuery(kv.get(1)));
+            }).collect(Collectors.joining("&"));
+        }
+        return tplValue;
     }
 
 

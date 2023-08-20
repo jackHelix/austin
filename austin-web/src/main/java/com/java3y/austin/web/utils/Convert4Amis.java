@@ -8,9 +8,11 @@ import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.java3y.austin.common.enums.AnchorState;
+import com.java3y.austin.common.enums.ChannelType;
+import com.java3y.austin.common.enums.EnumUtil;
 import com.java3y.austin.common.enums.SmsStatus;
 import com.java3y.austin.support.domain.ChannelAccount;
+import com.java3y.austin.support.domain.MessageTemplate;
 import com.java3y.austin.support.domain.SmsRecord;
 import com.java3y.austin.support.utils.TaskInfoUtils;
 import com.java3y.austin.web.vo.amis.CommonAmisVo;
@@ -60,7 +62,7 @@ public class Convert4Amis {
      * 需要格式化为jsonArray返回的字段
      * (前端是一个JSONArray传递进来)
      */
-    private static final List<String> PARSE_JSON_ARRAY = Arrays.asList("feedCards", "btns","articles");
+    private static final List<String> PARSE_JSON_ARRAY = Arrays.asList("feedCards", "btns", "articles");
 
     /**
      * (前端是一个JSONObject传递进来，返回一个JSONArray回去)
@@ -166,20 +168,22 @@ public class Convert4Amis {
                         .editable(true)
                         .needConfirm(false)
                         .build();
-                List<CommonAmisVo.ColumnsDTO> columnsDTOS = new ArrayList<>();
+                List<CommonAmisVo.ColumnsDTO> columnsDtoS = new ArrayList<>();
                 for (String datum : data) {
-                    String name = datum.substring(datum.indexOf("{{") + 2, datum.indexOf("."));
-                    CommonAmisVo.ColumnsDTO.ColumnsDTOBuilder dtoBuilder = CommonAmisVo.ColumnsDTO.builder().name(name).type("input-text").required(true).quickEdit(true);
-                    if (datum.contains("first")) {
-                        dtoBuilder.label("名字");
-                    } else if (datum.contains("remark")) {
-                        dtoBuilder.label("备注");
-                    } else {
-                        dtoBuilder.label(datum.split("：")[0]);
+                    if (StrUtil.isNotEmpty(datum)) {
+                        String name = datum.substring(datum.indexOf("{{") + 2, datum.indexOf("."));
+                        CommonAmisVo.ColumnsDTO.ColumnsDTOBuilder dtoBuilder = CommonAmisVo.ColumnsDTO.builder().name(name).type("input-text").required(true).quickEdit(true);
+                        if (datum.contains("first")) {
+                            dtoBuilder.label("名字");
+                        } else if (datum.contains("remark")) {
+                            dtoBuilder.label("备注");
+                        } else {
+                            dtoBuilder.label(datum.split("：")[0]);
+                        }
+                        columnsDtoS.add(dtoBuilder.build());
                     }
-                    columnsDTOS.add(dtoBuilder.build());
                 }
-                officialAccountParam.setColumns(columnsDTOS);
+                officialAccountParam.setColumns(columnsDtoS);
 
             }
         }
@@ -209,12 +213,12 @@ public class Convert4Amis {
                 .editable(true)
                 .needConfirm(false)
                 .build();
-        List<CommonAmisVo.ColumnsDTO> columnsDTOS = new ArrayList<>();
+        List<CommonAmisVo.ColumnsDTO> columnsDtoS = new ArrayList<>();
         for (String param : placeholderList) {
             CommonAmisVo.ColumnsDTO dto = CommonAmisVo.ColumnsDTO.builder().name(param).label(param).type("input-text").required(true).quickEdit(true).build();
-            columnsDTOS.add(dto);
+            columnsDtoS.add(dto);
         }
-        testParam.setColumns(columnsDTOS);
+        testParam.setColumns(columnsDtoS);
         return testParam;
     }
 
@@ -304,15 +308,15 @@ public class Convert4Amis {
                         .editable(true)
                         .needConfirm(false)
                         .build();
-                List<CommonAmisVo.ColumnsDTO> columnsDTOS = new ArrayList<>();
+                List<CommonAmisVo.ColumnsDTO> columnsDtoS = new ArrayList<>();
                 for (String datum : data) {
                     String name = datum.substring(datum.indexOf("{{") + 2, datum.indexOf("."));
                     String label = datum.split(":")[0];
                     CommonAmisVo.ColumnsDTO columnsDTO = CommonAmisVo.ColumnsDTO.builder()
                             .name(name).type("input-text").required(true).quickEdit(true).label(label).build();
-                    columnsDTOS.add(columnsDTO);
+                    columnsDtoS.add(columnsDTO);
                 }
-                officialAccountParam.setColumns(columnsDTOS);
+                officialAccountParam.setColumns(columnsDtoS);
 
             }
         }
@@ -349,7 +353,7 @@ public class Convert4Amis {
 
         CommonAmisVo service = CommonAmisVo.builder().type("service")
                 .api(CommonAmisVo.ApiDTO.builder().url("${ls:backend_url}/officialAccount/check/login?sceneId=" + id)
-                .adaptor(adaptor).requestAdaptor(requestAdaptor).build()).interval(2000).silentPolling(true).build();
+                        .adaptor(adaptor).requestAdaptor(requestAdaptor).build()).interval(2000).silentPolling(true).build();
 
         return CommonAmisVo.builder().type("form").title("登录").mode("horizontal").body(Arrays.asList(image, service)).build();
     }
@@ -361,8 +365,12 @@ public class Convert4Amis {
      *
      * @return
      */
-    public static List<CommonAmisVo> getChannelAccountVo(List<ChannelAccount> channelAccounts) {
+    public static List<CommonAmisVo> getChannelAccountVo(List<ChannelAccount> channelAccounts, Integer channelType) {
         List<CommonAmisVo> result = new ArrayList<>();
+        if (ChannelType.SMS.getCode().equals(channelType)) {
+            CommonAmisVo commonAmisVo = CommonAmisVo.builder().label("AUTO").value("0").build();
+            result.add(commonAmisVo);
+        }
         for (ChannelAccount channelAccount : channelAccounts) {
             CommonAmisVo commonAmisVo = CommonAmisVo.builder().label(channelAccount.getName()).value(String.valueOf(channelAccount.getId())).build();
             result.add(commonAmisVo);
@@ -373,30 +381,31 @@ public class Convert4Amis {
     /**
      * 【这个方法不用看】，纯粹为了适配amis前端
      * 获取 EchartsVo
+     *
      * @param anchorResult
      * @param businessId
      * @return
      */
-    public static EchartsVo getEchartsVo(Map<Object, Object> anchorResult, String templateName, String businessId) {
+    public static EchartsVo getEchartsVo(Map<Object, Object> anchorResult, MessageTemplate messageTemplate, String businessId) {
         List<String> xAxisList = new ArrayList<>();
         List<Integer> actualData = new ArrayList<>();
         if (CollUtil.isNotEmpty(anchorResult)) {
             anchorResult = MapUtil.sort(anchorResult);
             for (Map.Entry<Object, Object> entry : anchorResult.entrySet()) {
-                String description = AnchorState.getDescriptionByCode(Integer.valueOf(String.valueOf(entry.getKey())));
+                String description = AnchorStateUtils.getDescriptionByState(messageTemplate.getSendChannel(), Integer.valueOf(String.valueOf(entry.getKey())));
                 xAxisList.add(description);
                 actualData.add(Integer.valueOf(String.valueOf(entry.getValue())));
             }
         }
 
-        String title = "【" + templateName + "】在" + DateUtil.format(DateUtil.parse(String.valueOf(TaskInfoUtils.getDateFromBusinessId(Long.valueOf(businessId)))), DatePattern.CHINESE_DATE_FORMATTER) + "的下发情况：";
+        String title = "【" + messageTemplate.getName() + "】在" + DateUtil.format(DateUtil.parse(String.valueOf(TaskInfoUtils.getDateFromBusinessId(Long.valueOf(businessId)))), DatePattern.CHINESE_DATE_FORMATTER) + "的下发情况：";
 
         return EchartsVo.builder()
                 .title(EchartsVo.TitleVO.builder().text(title).build())
                 .legend(EchartsVo.LegendVO.builder().data(Arrays.asList("人数")).build())
-                .xAxis(EchartsVo.XAxisVO.builder().data(xAxisList).build())
+                .xAxis(EchartsVo.XaxisVO.builder().data(xAxisList).build())
                 .series(Arrays.asList(EchartsVo.SeriesVO.builder().name("人数").type("bar").data(actualData).build()))
-                .yAxis(EchartsVo.YAxisVO.builder().build())
+                .yAxis(EchartsVo.YaxisVO.builder().build())
                 .tooltip(EchartsVo.TooltipVO.builder().build())
                 .build();
 
@@ -405,12 +414,13 @@ public class Convert4Amis {
     /**
      * 【这个方法不用看】，纯粹为了适配amis前端
      * 获取 SmsTimeLineVo
+     *
      * @return
      */
     public static SmsTimeLineVo getSmsTimeLineVo(Map<String, List<SmsRecord>> maps) {
 
-        ArrayList<SmsTimeLineVo.ItemsVO> itemsVOS = new ArrayList<>();
-        SmsTimeLineVo smsTimeLineVo = SmsTimeLineVo.builder().items(itemsVOS).build();
+        ArrayList<SmsTimeLineVo.ItemsVO> itemsVoS = new ArrayList<>();
+        SmsTimeLineVo smsTimeLineVo = SmsTimeLineVo.builder().items(itemsVoS).build();
 
         for (Map.Entry<String, List<SmsRecord>> entry : maps.entrySet()) {
             SmsTimeLineVo.ItemsVO itemsVO = SmsTimeLineVo.ItemsVO.builder().build();
@@ -419,15 +429,15 @@ public class Convert4Amis {
                 if (smsRecord.getMessageTemplateId() > 0) {
                     itemsVO.setBusinessId(String.valueOf(smsRecord.getMessageTemplateId()));
                     itemsVO.setContent(smsRecord.getMsgContent());
-                    itemsVO.setSendType(SmsStatus.getDescriptionByStatus(smsRecord.getStatus()));
+                    itemsVO.setSendType(EnumUtil.getDescriptionByCode(smsRecord.getStatus(), SmsStatus.class));
                     itemsVO.setSendTime(DateUtil.format(new Date(Long.valueOf(smsRecord.getCreated() * 1000L)), DatePattern.NORM_DATETIME_PATTERN));
                 } else {
-                    itemsVO.setReceiveType(SmsStatus.getDescriptionByStatus(smsRecord.getStatus()));
+                    itemsVO.setReceiveType(EnumUtil.getDescriptionByCode(smsRecord.getStatus(), SmsStatus.class));
                     itemsVO.setReceiveContent(smsRecord.getReportContent());
                     itemsVO.setReceiveTime(DateUtil.format(new Date(Long.valueOf(smsRecord.getUpdated() * 1000L)), DatePattern.NORM_DATETIME_PATTERN));
                 }
             }
-            itemsVOS.add(itemsVO);
+            itemsVoS.add(itemsVO);
         }
 
         return smsTimeLineVo;

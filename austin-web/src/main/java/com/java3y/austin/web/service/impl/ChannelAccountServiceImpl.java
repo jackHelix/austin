@@ -6,12 +6,12 @@ import com.java3y.austin.common.constant.AustinConstant;
 import com.java3y.austin.common.constant.CommonConstant;
 import com.java3y.austin.support.dao.ChannelAccountDao;
 import com.java3y.austin.support.domain.ChannelAccount;
-import com.java3y.austin.support.utils.WxServiceUtils;
 import com.java3y.austin.web.service.ChannelAccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author 3y
@@ -21,20 +21,16 @@ public class ChannelAccountServiceImpl implements ChannelAccountService {
 
     @Autowired
     private ChannelAccountDao channelAccountDao;
-    @Autowired
-    private WxServiceUtils wxServiceUtils;
 
     @Override
     public ChannelAccount save(ChannelAccount channelAccount) {
-        if (channelAccount.getId() == null) {
+        if (Objects.isNull(channelAccount.getId())) {
             channelAccount.setCreated(Math.toIntExact(DateUtil.currentSeconds()));
             channelAccount.setIsDeleted(CommonConstant.FALSE);
         }
         channelAccount.setCreator(StrUtil.isBlank(channelAccount.getCreator()) ? AustinConstant.DEFAULT_CREATOR : channelAccount.getCreator());
         channelAccount.setUpdated(Math.toIntExact(DateUtil.currentSeconds()));
-        ChannelAccount result = channelAccountDao.save(channelAccount);
-        wxServiceUtils.fresh();
-        return result;
+        return channelAccountDao.save(channelAccount);
     }
 
     @Override

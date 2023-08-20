@@ -1,6 +1,5 @@
 package com.java3y.austin.handler.shield.impl;
 
-import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.java3y.austin.common.domain.AnchorInfo;
@@ -15,11 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashSet;
 
 /**
  * 屏蔽服务
+ *
  * @author 3y
  */
 @Service
@@ -27,6 +26,8 @@ import java.util.HashSet;
 public class ShieldServiceImpl implements ShieldService {
 
     private static final String NIGHT_SHIELD_BUT_NEXT_DAY_SEND_KEY = "night_shield_send";
+
+    private static final long SECONDS_OF_A_DAY = 86400L;
     @Autowired
     private RedisUtils redisUtils;
     @Autowired
@@ -46,13 +47,13 @@ public class ShieldServiceImpl implements ShieldService {
         if (isNight()) {
             if (ShieldType.NIGHT_SHIELD.getCode().equals(taskInfo.getShieldType())) {
                 logUtils.print(AnchorInfo.builder().state(AnchorState.NIGHT_SHIELD.getCode())
-                        .businessId(taskInfo.getBusinessId()).ids(taskInfo.getReceiver()).build());
+                        .bizId(taskInfo.getBizId()).messageId(taskInfo.getMessageId()).businessId(taskInfo.getBusinessId()).ids(taskInfo.getReceiver()).build());
             }
             if (ShieldType.NIGHT_SHIELD_BUT_NEXT_DAY_SEND.getCode().equals(taskInfo.getShieldType())) {
                 redisUtils.lPush(NIGHT_SHIELD_BUT_NEXT_DAY_SEND_KEY, JSON.toJSONString(taskInfo,
-                        SerializerFeature.WriteClassName),
-                        (DateUtil.offsetDay(new Date(), 1).getTime() / 1000) - DateUtil.currentSeconds());
-                logUtils.print(AnchorInfo.builder().state(AnchorState.NIGHT_SHIELD_NEXT_SEND.getCode()).businessId(taskInfo.getBusinessId()).ids(taskInfo.getReceiver()).build());
+                                SerializerFeature.WriteClassName),
+                        SECONDS_OF_A_DAY);
+                logUtils.print(AnchorInfo.builder().state(AnchorState.NIGHT_SHIELD_NEXT_SEND.getCode()).bizId(taskInfo.getBizId()).messageId(taskInfo.getMessageId()).businessId(taskInfo.getBusinessId()).ids(taskInfo.getReceiver()).build());
             }
             taskInfo.setReceiver(new HashSet<>());
         }
@@ -64,7 +65,7 @@ public class ShieldServiceImpl implements ShieldService {
      * @return
      */
     private boolean isNight() {
-       return LocalDateTime.now().getHour() < 8;
+        return LocalDateTime.now().getHour() < 8;
 
     }
 

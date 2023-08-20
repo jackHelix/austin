@@ -1,22 +1,22 @@
 package com.java3y.austin.handler.handler.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.base.Throwables;
 import com.java3y.austin.common.constant.AustinConstant;
 import com.java3y.austin.common.constant.CommonConstant;
-import com.java3y.austin.common.constant.SendAccountConstant;
+import com.java3y.austin.common.domain.AnchorInfo;
+import com.java3y.austin.common.domain.RecallTaskInfo;
 import com.java3y.austin.common.domain.TaskInfo;
 import com.java3y.austin.common.dto.model.EnterpriseWeChatContentModel;
 import com.java3y.austin.common.enums.ChannelType;
 import com.java3y.austin.common.enums.SendMessageType;
 import com.java3y.austin.handler.handler.BaseHandler;
 import com.java3y.austin.handler.handler.Handler;
-import com.java3y.austin.support.domain.MessageTemplate;
 import com.java3y.austin.support.utils.AccountUtils;
+import com.java3y.austin.support.utils.LogUtils;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.error.WxMpErrorMsgEnum;
+import me.chanjar.weixin.common.error.WxCpErrorMsgEnum;
 import me.chanjar.weixin.cp.api.WxCpService;
 import me.chanjar.weixin.cp.api.impl.WxCpMessageServiceImpl;
 import me.chanjar.weixin.cp.api.impl.WxCpServiceImpl;
@@ -42,6 +42,8 @@ public class EnterpriseWeChatHandler extends BaseHandler implements Handler {
 
     @Autowired
     private AccountUtils accountUtils;
+    @Autowired
+    private LogUtils logUtils;
 
     public EnterpriseWeChatHandler() {
         channelCode = ChannelType.ENTERPRISE_WE_CHAT.getCode();
@@ -53,11 +55,11 @@ public class EnterpriseWeChatHandler extends BaseHandler implements Handler {
             WxCpDefaultConfigImpl accountConfig = accountUtils.getAccountById(taskInfo.getSendAccount(), WxCpDefaultConfigImpl.class);
             WxCpMessageServiceImpl messageService = new WxCpMessageServiceImpl(initService(accountConfig));
             WxCpMessageSendResult result = messageService.send(buildWxCpMessage(taskInfo, accountConfig.getAgentId()));
-            if (Integer.valueOf(WxMpErrorMsgEnum.CODE_0.getCode()).equals(result.getErrCode())) {
+            if (Integer.valueOf(WxCpErrorMsgEnum.CODE_0.getCode()).equals(result.getErrCode())) {
                 return true;
             }
-            // 常见的错误 应当 关联至 AnchorState,由austin后台统一透出失败原因
-            log.error("EnterpriseWeChatHandler#handler fail!result:{},params:{}", JSON.toJSONString(result), JSON.toJSONString(taskInfo));
+            logUtils.print(AnchorInfo.builder().bizId(taskInfo.getBizId()).messageId(taskInfo.getMessageId()).businessId(taskInfo.getBusinessId())
+                    .ids(taskInfo.getReceiver()).state(result.getErrCode()).build());
         } catch (Exception e) {
             log.error("EnterpriseWeChatHandler#handler fail:{},params:{}",
                     Throwables.getStackTraceAsString(e), JSON.toJSONString(taskInfo));
@@ -128,10 +130,10 @@ public class EnterpriseWeChatHandler extends BaseHandler implements Handler {
         return wxCpMessage;
     }
 
+
     @Override
-    public void recall(MessageTemplate messageTemplate) {
+    public void recall(RecallTaskInfo recallTaskInfo) {
 
     }
-
 }
 

@@ -5,6 +5,8 @@ import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSON;
 import com.google.common.base.Throwables;
+import com.java3y.austin.common.domain.AnchorInfo;
+import com.java3y.austin.common.domain.RecallTaskInfo;
 import com.java3y.austin.common.domain.TaskInfo;
 import com.java3y.austin.common.dto.account.EnterpriseWeChatRobotAccount;
 import com.java3y.austin.common.dto.model.EnterpriseWeChatRobotContentModel;
@@ -14,9 +16,10 @@ import com.java3y.austin.handler.domain.wechat.robot.EnterpriseWeChatRobotParam;
 import com.java3y.austin.handler.domain.wechat.robot.EnterpriseWeChatRootResult;
 import com.java3y.austin.handler.handler.BaseHandler;
 import com.java3y.austin.handler.handler.Handler;
-import com.java3y.austin.support.domain.MessageTemplate;
 import com.java3y.austin.support.utils.AccountUtils;
+import com.java3y.austin.support.utils.LogUtils;
 import lombok.extern.slf4j.Slf4j;
+import me.chanjar.weixin.common.error.WxCpErrorMsgEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +36,8 @@ public class EnterpriseWeChatRobotHandler extends BaseHandler implements Handler
 
     @Autowired
     private AccountUtils accountUtils;
+    @Autowired
+    private LogUtils logUtils;
 
     public EnterpriseWeChatRobotHandler() {
         channelCode = ChannelType.ENTERPRISE_WE_CHAT_ROBOT.getCode();
@@ -48,10 +53,11 @@ public class EnterpriseWeChatRobotHandler extends BaseHandler implements Handler
                     .timeout(2000)
                     .execute().body();
             EnterpriseWeChatRootResult weChatRootResult = JSON.parseObject(result, EnterpriseWeChatRootResult.class);
-            if (weChatRootResult.getErrcode() == 0) {
+            if (Integer.valueOf(WxCpErrorMsgEnum.CODE_0.getCode()).equals(weChatRootResult.getErrcode())) {
                 return true;
             }
-            log.error("EnterpriseWeChatRobotHandler#handler fail! result:{},params:{}", JSON.toJSONString(weChatRootResult), JSON.toJSONString(taskInfo));
+            logUtils.print(AnchorInfo.builder().bizId(taskInfo.getBizId()).messageId(taskInfo.getMessageId()).businessId(taskInfo.getBusinessId())
+                    .ids(taskInfo.getReceiver()).state(weChatRootResult.getErrcode()).build());
         } catch (Exception e) {
             log.error("EnterpriseWeChatRobotHandler#handler fail!e:{},params:{}", Throwables.getStackTraceAsString(e), JSON.toJSONString(taskInfo));
         }
@@ -76,8 +82,8 @@ public class EnterpriseWeChatRobotHandler extends BaseHandler implements Handler
             param.setFile(EnterpriseWeChatRobotParam.FileDTO.builder().mediaId(contentModel.getMediaId()).build());
         }
         if (SendMessageType.NEWS.getCode().equals(contentModel.getSendType())) {
-            List<EnterpriseWeChatRobotParam.NewsDTO.ArticlesDTO> articlesDTOS = JSON.parseArray(contentModel.getArticles(), EnterpriseWeChatRobotParam.NewsDTO.ArticlesDTO.class);
-            param.setNews(EnterpriseWeChatRobotParam.NewsDTO.builder().articles(articlesDTOS).build());
+            List<EnterpriseWeChatRobotParam.NewsDTO.ArticlesDTO> articlesDtoS = JSON.parseArray(contentModel.getArticles(), EnterpriseWeChatRobotParam.NewsDTO.ArticlesDTO.class);
+            param.setNews(EnterpriseWeChatRobotParam.NewsDTO.builder().articles(articlesDtoS).build());
         }
         if (SendMessageType.TEMPLATE_CARD.getCode().equals(contentModel.getSendType())) {
             //
@@ -85,8 +91,9 @@ public class EnterpriseWeChatRobotHandler extends BaseHandler implements Handler
         return param;
     }
 
+
     @Override
-    public void recall(MessageTemplate messageTemplate) {
+    public void recall(RecallTaskInfo recallTaskInfo) {
 
     }
 }

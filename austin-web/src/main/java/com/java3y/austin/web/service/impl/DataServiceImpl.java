@@ -11,6 +11,9 @@ import com.java3y.austin.common.constant.AustinConstant;
 import com.java3y.austin.common.domain.SimpleAnchorInfo;
 import com.java3y.austin.common.enums.AnchorState;
 import com.java3y.austin.common.enums.ChannelType;
+import com.java3y.austin.common.enums.EnumUtil;
+import com.java3y.austin.service.api.domain.TraceResponse;
+import com.java3y.austin.service.api.service.TraceService;
 import com.java3y.austin.support.dao.MessageTemplateDao;
 import com.java3y.austin.support.dao.SmsRecordDao;
 import com.java3y.austin.support.domain.MessageTemplate;
@@ -18,6 +21,7 @@ import com.java3y.austin.support.domain.SmsRecord;
 import com.java3y.austin.support.utils.RedisUtils;
 import com.java3y.austin.support.utils.TaskInfoUtils;
 import com.java3y.austin.web.service.DataService;
+import com.java3y.austin.web.utils.AnchorStateUtils;
 import com.java3y.austin.web.utils.Convert4Amis;
 import com.java3y.austin.web.vo.DataParam;
 import com.java3y.austin.web.vo.amis.EchartsVo;
@@ -46,6 +50,18 @@ public class DataServiceImpl implements DataService {
     @Autowired
     private SmsRecordDao smsRecordDao;
 
+    @Autowired
+    private TraceService traceService;
+
+
+    @Override
+    public UserTimeLineVo getTraceMessageInfo(String messageId) {
+        TraceResponse traceResponse = traceService.traceByMessageId(messageId);
+        if (CollUtil.isEmpty(traceResponse.getData())) {
+            return UserTimeLineVo.builder().items(new ArrayList<>()).build();
+        }
+        return buildUserTimeLineVo(traceResponse.getData());
+    }
 
     @Override
     public UserTimeLineVo getTraceUserInfo(String receiver) {
@@ -56,48 +72,7 @@ public class DataServiceImpl implements DataService {
 
         // 0. 按时间排序
         List<SimpleAnchorInfo> sortAnchorList = userInfoList.stream().map(s -> JSON.parseObject(s, SimpleAnchorInfo.class)).sorted((o1, o2) -> Math.toIntExact(o1.getTimestamp() - o2.getTimestamp())).collect(Collectors.toList());
-
-        // 1. 对相同的businessId进行分类  {"businessId":[{businessId,state,timeStamp},{businessId,state,timeStamp}]}
-        Map<String, List<SimpleAnchorInfo>> map = MapUtil.newHashMap();
-        for (SimpleAnchorInfo simpleAnchorInfo : sortAnchorList) {
-            List<SimpleAnchorInfo> simpleAnchorInfos = map.get(String.valueOf(simpleAnchorInfo.getBusinessId()));
-            if (CollUtil.isEmpty(simpleAnchorInfos)) {
-                simpleAnchorInfos = new ArrayList<>();
-            }
-            simpleAnchorInfos.add(simpleAnchorInfo);
-            map.put(String.valueOf(simpleAnchorInfo.getBusinessId()), simpleAnchorInfos);
-        }
-
-        // 2. 封装vo 给到前端渲染展示
-        List<UserTimeLineVo.ItemsVO> items = new ArrayList<>();
-        for (Map.Entry<String, List<SimpleAnchorInfo>> entry : map.entrySet()) {
-            Long messageTemplateId = TaskInfoUtils.getMessageTemplateIdFromBusinessId(Long.valueOf(entry.getKey()));
-            MessageTemplate messageTemplate = messageTemplateDao.findById(messageTemplateId).get();
-
-            StringBuilder sb = new StringBuilder();
-            for (SimpleAnchorInfo simpleAnchorInfo : entry.getValue()) {
-                if (AnchorState.RECEIVE.getCode().equals(simpleAnchorInfo.getState())) {
-                    sb.append(StrPool.CRLF);
-                }
-                String startTime = DateUtil.format(new Date(simpleAnchorInfo.getTimestamp()), DatePattern.NORM_DATETIME_PATTERN);
-                String stateDescription = AnchorState.getDescriptionByCode(simpleAnchorInfo.getState());
-                sb.append(startTime).append(StrPool.C_COLON).append(stateDescription).append("==>");
-            }
-
-            for (String detail : sb.toString().split(StrPool.CRLF)) {
-                if (StrUtil.isNotBlank(detail)) {
-                    UserTimeLineVo.ItemsVO itemsVO = UserTimeLineVo.ItemsVO.builder()
-                            .businessId(entry.getKey())
-                            .sendType(ChannelType.getEnumByCode(messageTemplate.getSendChannel()).getDescription())
-                            .creator(messageTemplate.getCreator())
-                            .title(messageTemplate.getName())
-                            .detail(detail)
-                            .build();
-                    items.add(itemsVO);
-                }
-            }
-        }
-        return UserTimeLineVo.builder().items(items).build();
+        return buildUserTimeLineVo(sortAnchorList);
     }
 
     @Override
@@ -117,7 +92,7 @@ public class DataServiceImpl implements DataService {
          */
         Map<Object, Object> anchorResult = redisUtils.hGetAll(getRealBusinessId(businessId));
 
-        return Convert4Amis.getEchartsVo(anchorResult, optional.get().getName(), businessId);
+        return Convert4Amis.getEchartsVo(anchorResult, optional.get(), businessId);
     }
 
     @Override
@@ -148,5 +123,53 @@ public class DataServiceImpl implements DataService {
             return String.valueOf(TaskInfoUtils.generateBusinessId(messageTemplate.getId(), messageTemplate.getTemplateType()));
         }
         return businessId;
+    }
+
+    private UserTimeLineVo buildUserTimeLineVo(List<SimpleAnchorInfo> sortAnchorList) {
+        // 1. 对相同的businessId进行分类  {"businessId":[{businessId,state,timeStamp},{businessId,state,timeStamp}]}
+        Map<String, List<SimpleAnchorInfo>> map = MapUtil.newHashMap();
+        for (SimpleAnchorInfo simpleAnchorInfo : sortAnchorList) {
+            List<SimpleAnchorInfo> simpleAnchorInfos = map.get(String.valueOf(simpleAnchorInfo.getBusinessId()));
+            if (CollUtil.isEmpty(simpleAnchorInfos)) {
+                simpleAnchorInfos = new ArrayList<>();
+            }
+            simpleAnchorInfos.add(simpleAnchorInfo);
+            map.put(String.valueOf(simpleAnchorInfo.getBusinessId()), simpleAnchorInfos);
+        }
+
+        // 2. 封装vo 给到前端渲染展示
+        List<UserTimeLineVo.ItemsVO> items = new ArrayList<>();
+        for (Map.Entry<String, List<SimpleAnchorInfo>> entry : map.entrySet()) {
+            Long messageTemplateId = TaskInfoUtils.getMessageTemplateIdFromBusinessId(Long.valueOf(entry.getKey()));
+            MessageTemplate messageTemplate = messageTemplateDao.findById(messageTemplateId).orElse(null);
+            if (Objects.isNull(messageTemplate)) {
+                continue;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (SimpleAnchorInfo simpleAnchorInfo : entry.getValue()) {
+                if (AnchorState.RECEIVE.getCode().equals(simpleAnchorInfo.getState())) {
+                    sb.append(StrPool.CRLF);
+                }
+                String startTime = DateUtil.format(new Date(simpleAnchorInfo.getTimestamp()), DatePattern.NORM_DATETIME_PATTERN);
+                String stateDescription = AnchorStateUtils.getDescriptionByState(messageTemplate.getSendChannel(), simpleAnchorInfo.getState());
+
+                sb.append(startTime).append(StrPool.C_COLON).append(stateDescription).append("==>");
+            }
+
+            for (String detail : sb.toString().split(StrPool.CRLF)) {
+                if (StrUtil.isNotBlank(detail)) {
+                    UserTimeLineVo.ItemsVO itemsVO = UserTimeLineVo.ItemsVO.builder()
+                            .businessId(entry.getKey())
+                            .sendType(EnumUtil.getEnumByCode(messageTemplate.getSendChannel(), ChannelType.class).getDescription())
+                            .creator(messageTemplate.getCreator())
+                            .title(messageTemplate.getName())
+                            .detail(detail)
+                            .build();
+                    items.add(itemsVO);
+                }
+            }
+        }
+        return UserTimeLineVo.builder().items(items).build();
     }
 }

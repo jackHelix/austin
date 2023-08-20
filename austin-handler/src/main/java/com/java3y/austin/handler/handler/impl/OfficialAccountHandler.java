@@ -1,15 +1,19 @@
 package com.java3y.austin.handler.handler.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.base.Throwables;
+import com.java3y.austin.common.domain.AnchorInfo;
+import com.java3y.austin.common.domain.RecallTaskInfo;
 import com.java3y.austin.common.domain.TaskInfo;
 import com.java3y.austin.common.dto.model.OfficialAccountsContentModel;
 import com.java3y.austin.common.enums.ChannelType;
 import com.java3y.austin.handler.handler.BaseHandler;
 import com.java3y.austin.handler.handler.Handler;
-import com.java3y.austin.support.domain.MessageTemplate;
-import com.java3y.austin.support.utils.WxServiceUtils;
+import com.java3y.austin.support.utils.AccountUtils;
+import com.java3y.austin.support.utils.LogUtils;
 import lombok.extern.slf4j.Slf4j;
+import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateData;
 import me.chanjar.weixin.mp.bean.template.WxMpTemplateMessage;
@@ -30,7 +34,9 @@ import java.util.Set;
 public class OfficialAccountHandler extends BaseHandler implements Handler {
 
     @Autowired
-    private WxServiceUtils wxServiceUtils;
+    private AccountUtils accountUtils;
+    @Autowired
+    private LogUtils logUtils;
 
     public OfficialAccountHandler() {
         channelCode = ChannelType.OFFICIAL_ACCOUNT.getCode();
@@ -40,39 +46,32 @@ public class OfficialAccountHandler extends BaseHandler implements Handler {
     public boolean handler(TaskInfo taskInfo) {
         try {
             OfficialAccountsContentModel contentModel = (OfficialAccountsContentModel) taskInfo.getContentModel();
-            WxMpService wxMpService = wxServiceUtils.getOfficialAccountServiceMap().get(taskInfo.getSendAccount().longValue());
-            List<WxMpTemplateMessage> messages = assembleReq(taskInfo.getReceiver(), contentModel);
-            for (WxMpTemplateMessage message : messages) {
-                try {
-                    wxMpService.getTemplateMsgService().sendTemplateMsg(message);
-                } catch (Exception e) {
-                    log.info("OfficialAccountHandler#handler fail! param:{},e:{}", JSON.toJSONString(taskInfo), Throwables.getStackTraceAsString(e));
-                }
-            }
+            WxMpService wxMpService = accountUtils.getAccountById(taskInfo.getSendAccount(), WxMpService.class);
+
+            WxMpTemplateMessage message = assembleReq(taskInfo.getReceiver(), contentModel);
+            wxMpService.getTemplateMsgService().sendTemplateMsg(message);
+
             return true;
+        } catch (WxErrorException e) {
+            logUtils.print(AnchorInfo.builder().bizId(taskInfo.getBizId()).messageId(taskInfo.getMessageId()).businessId(taskInfo.getBusinessId())
+                    .ids(taskInfo.getReceiver()).state(e.getError().getErrorCode()).build());
         } catch (Exception e) {
             log.error("OfficialAccountHandler#handler fail:{},params:{}", Throwables.getStackTraceAsString(e), JSON.toJSONString(taskInfo));
         }
         return false;
     }
 
-
     /**
      * 组装发送模板信息参数
      */
-    private List<WxMpTemplateMessage> assembleReq(Set<String> receiver, OfficialAccountsContentModel contentModel) {
-        List<WxMpTemplateMessage> wxMpTemplateMessages = new ArrayList<>(receiver.size());
-        for (String openId : receiver) {
-            WxMpTemplateMessage templateMessage = WxMpTemplateMessage.builder()
-                    .toUser(openId)
-                    .templateId(contentModel.getTemplateId())
-                    .url(contentModel.getUrl())
-                    .data(getWxMpTemplateData(contentModel.getOfficialAccountParam()))
-                    .miniProgram(new WxMpTemplateMessage.MiniProgram(contentModel.getMiniProgramId(), contentModel.getPath(), false))
-                    .build();
-            wxMpTemplateMessages.add(templateMessage);
-        }
-        return wxMpTemplateMessages;
+    private WxMpTemplateMessage assembleReq(Set<String> receiver, OfficialAccountsContentModel contentModel) {
+        return WxMpTemplateMessage.builder()
+                .toUser(CollUtil.getFirst(receiver.iterator()))
+                .templateId(contentModel.getTemplateId())
+                .url(contentModel.getUrl())
+                .data(getWxMpTemplateData(contentModel.getOfficialAccountParam()))
+                .miniProgram(new WxMpTemplateMessage.MiniProgram(contentModel.getMiniProgramId(), contentModel.getPath(), false))
+                .build();
     }
 
     /**
@@ -86,8 +85,9 @@ public class OfficialAccountHandler extends BaseHandler implements Handler {
         return templateDataList;
     }
 
+
     @Override
-    public void recall(MessageTemplate messageTemplate) {
+    public void recall(RecallTaskInfo recallTaskInfo) {
 
     }
 }

@@ -1,9 +1,6 @@
 package com.java3y.austin.support.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,6 +16,7 @@ import javax.persistence.Id;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@ToString
 public class ChannelAccount {
 
     @Id
@@ -32,7 +30,8 @@ public class ChannelAccount {
 
     /**
      * 发送渠道
-     * 枚举值：com.java3y.austin.common.enums.ChannelType
+     *
+     * @see com.java3y.austin.common.enums.ChannelType
      */
     private Integer sendChannel;
 

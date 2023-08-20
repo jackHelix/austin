@@ -2,7 +2,6 @@ package com.java3y.austin.service.api.impl.domain;
 
 import com.java3y.austin.common.domain.TaskInfo;
 import com.java3y.austin.service.api.domain.MessageParam;
-import com.java3y.austin.support.domain.MessageTemplate;
 import com.java3y.austin.support.pipeline.ProcessModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,10 +35,5 @@ public class SendTaskModel implements ProcessModel {
      * 发送任务的信息
      */
     private List<TaskInfo> taskInfo;
-
-    /**
-     * 撤回任务的信息
-     */
-    private MessageTemplate messageTemplate;
 
 }

@@ -2,8 +2,6 @@ package com.java3y.austin.handler.alipay.impl;
 
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
-import com.alipay.api.AlipayConfig;
-import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.domain.AlipayOpenAppMiniTemplatemessageSendModel;
 import com.alipay.api.request.AlipayOpenAppMiniTemplatemessageSendRequest;
 import com.java3y.austin.common.dto.account.AlipayMiniProgramAccount;
@@ -50,11 +48,11 @@ public class AlipayMiniProgramAccountServiceImpl implements AlipayMiniProgramAcc
     /**
      * 组装模板消息的参数
      */
-    private List<AlipayOpenAppMiniTemplatemessageSendRequest> assembleReq(AlipayMiniProgramParam alipayMiniProgramParam, AlipayMiniProgramAccount alipayMiniProgramAccount){
+    private List<AlipayOpenAppMiniTemplatemessageSendRequest> assembleReq(AlipayMiniProgramParam alipayMiniProgramParam, AlipayMiniProgramAccount alipayMiniProgramAccount) {
         Set<String> receiver = alipayMiniProgramParam.getToUserId();
         List<AlipayOpenAppMiniTemplatemessageSendRequest> requestList = new ArrayList<>(receiver.size());
 
-        for(String toUserId : receiver){
+        for (String toUserId : receiver) {
             AlipayOpenAppMiniTemplatemessageSendRequest request = new AlipayOpenAppMiniTemplatemessageSendRequest();
             AlipayOpenAppMiniTemplatemessageSendModel model = new AlipayOpenAppMiniTemplatemessageSendModel();
             model.setToUserId(toUserId);
@@ -66,21 +64,6 @@ public class AlipayMiniProgramAccountServiceImpl implements AlipayMiniProgramAcc
         }
         return requestList;
     }
-
-//    /**
-//     * 初始化支付宝小程序
-//     */
-//    private AlipayClient initService(AlipayMiniProgramAccount alipayMiniProgramAccount) throws AlipayApiException {
-//        AlipayConfig alipayConfig = new AlipayConfig();
-//        alipayConfig.setServerUrl("https://openapi.alipaydev.com/gateway.do");
-//        alipayConfig.setAppId(alipayMiniProgramAccount.getAppId());
-//        alipayConfig.setPrivateKey(alipayMiniProgramAccount.getPrivateKey());
-//        alipayConfig.setFormat("json");
-//        alipayConfig.setAlipayPublicKey(alipayMiniProgramAccount.getAlipayPublicKey());
-//        alipayConfig.setCharset("utf-8");
-//        alipayConfig.setSignType("RSA2");
-//        return new DefaultAlipayClient(alipayConfig);
-//    }
 
 
 }

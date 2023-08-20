@@ -2,7 +2,7 @@ package com.java3y.austin.support.utils;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.IdUtil;
 import com.java3y.austin.common.constant.CommonConstant;
 
 import java.util.Date;
@@ -16,6 +16,15 @@ public class TaskInfoUtils {
 
     private static final int TYPE_FLAG = 1000000;
     private static final String CODE = "track_code_bid";
+
+    /**
+     * 生成任务唯一Id
+     *
+     * @return
+     */
+    public static String generateMessageId() {
+        return IdUtil.nanoId();
+    }
 
     /**
      * 生成BusinessId
@@ -33,6 +42,7 @@ public class TaskInfoUtils {
     public static Long getMessageTemplateIdFromBusinessId(Long businessId) {
         return Long.valueOf(String.valueOf(businessId).substring(1, 8));
     }
+
     /**
      * 从businessId切割出日期
      */

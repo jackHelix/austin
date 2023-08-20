@@ -1,11 +1,13 @@
 package com.java3y.austin.handler.handler.impl;
 
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.mail.MailAccount;
 import cn.hutool.extra.mail.MailUtil;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.RateLimiter;
-import com.java3y.austin.common.constant.SendAccountConstant;
+import com.java3y.austin.common.domain.RecallTaskInfo;
 import com.java3y.austin.common.domain.TaskInfo;
 import com.java3y.austin.common.dto.model.EmailContentModel;
 import com.java3y.austin.common.enums.ChannelType;
@@ -13,12 +15,16 @@ import com.java3y.austin.handler.enums.RateLimitStrategy;
 import com.java3y.austin.handler.flowcontrol.FlowControlParam;
 import com.java3y.austin.handler.handler.BaseHandler;
 import com.java3y.austin.handler.handler.Handler;
-import com.java3y.austin.support.domain.MessageTemplate;
 import com.java3y.austin.support.utils.AccountUtils;
+import com.java3y.austin.support.utils.AustinFileUtils;
 import com.sun.mail.util.MailSSLSocketFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.util.List;
 
 /**
  * 邮件发送处理
@@ -31,6 +37,9 @@ public class EmailHandler extends BaseHandler implements Handler {
 
     @Autowired
     private AccountUtils accountUtils;
+
+    @Value("${austin.business.upload.crowd.path}")
+    private String dataPath;
 
     public EmailHandler() {
         channelCode = ChannelType.EMAIL.getCode();
@@ -48,8 +57,9 @@ public class EmailHandler extends BaseHandler implements Handler {
         EmailContentModel emailContentModel = (EmailContentModel) taskInfo.getContentModel();
         MailAccount account = getAccountConfig(taskInfo.getSendAccount());
         try {
-            MailUtil.send(account, taskInfo.getReceiver(), emailContentModel.getTitle(),
-                    emailContentModel.getContent(), true, null);
+            List<File> files = StrUtil.isNotBlank(emailContentModel.getUrl()) ? AustinFileUtils.getRemoteUrl2File(dataPath, StrUtil.split(emailContentModel.getUrl(), StrUtil.COMMA)) : null;
+            String result = CollUtil.isEmpty(files) ? MailUtil.send(account, taskInfo.getReceiver(), emailContentModel.getTitle(), emailContentModel.getContent(), true) :
+                    MailUtil.send(account, taskInfo.getReceiver(), emailContentModel.getTitle(), emailContentModel.getContent(), true, files.toArray(new File[files.size()]));
         } catch (Exception e) {
             log.error("EmailHandler#handler fail!{},params:{}", Throwables.getStackTraceAsString(e), taskInfo);
             return false;
@@ -58,7 +68,7 @@ public class EmailHandler extends BaseHandler implements Handler {
     }
 
     /**
-     * 获取账号信息合配置
+     * 获取账号信息和配置
      *
      * @return
      */
@@ -74,8 +84,10 @@ public class EmailHandler extends BaseHandler implements Handler {
         }
         return account;
     }
+
+
     @Override
-    public void recall(MessageTemplate messageTemplate) {
+    public void recall(RecallTaskInfo recallTaskInfo) {
 
     }
 }

@@ -2,7 +2,6 @@ package com.java3y.austin.cron.xxl.utils;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
-import com.java3y.austin.common.constant.AustinConstant;
 import com.java3y.austin.common.constant.CommonConstant;
 import com.java3y.austin.common.enums.RespStatusEnum;
 import com.java3y.austin.common.vo.BasicResultVO;
@@ -17,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * xxlJob工具类
@@ -68,7 +68,7 @@ public class XxlJobUtils {
                 .alarmEmail(StrUtil.EMPTY)
                 .childJobId(StrUtil.EMPTY).build();
 
-        if (messageTemplate.getCronTaskId() != null) {
+        if (Objects.nonNull(messageTemplate.getCronTaskId())) {
             xxlJobInfo.setId(messageTemplate.getCronTaskId());
         }
         return xxlJobInfo;
@@ -76,11 +76,12 @@ public class XxlJobUtils {
 
     /**
      * 根据就配置文件的内容获取jobGroupId，没有则创建
+     *
      * @return
      */
     private Integer queryJobGroupId() {
         BasicResultVO basicResultVO = cronTaskService.getGroupId(appName, jobHandlerName);
-        if (basicResultVO.getData() == null) {
+        if (Objects.isNull(basicResultVO.getData())) {
             XxlJobGroup xxlJobGroup = XxlJobGroup.builder().appname(appName).title(jobHandlerName).addressType(CommonConstant.FALSE).build();
             if (RespStatusEnum.SUCCESS.getCode().equals(cronTaskService.createGroup(xxlJobGroup).getStatus())) {
                 return (int) cronTaskService.getGroupId(appName, jobHandlerName).getData();
