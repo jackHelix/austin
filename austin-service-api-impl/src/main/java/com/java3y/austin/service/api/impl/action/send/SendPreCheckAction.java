@@ -1,14 +1,15 @@
 package com.java3y.austin.service.api.impl.action.send;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.core.text.StrPool;
 import com.java3y.austin.common.constant.AustinConstant;
 import com.java3y.austin.common.enums.RespStatusEnum;
+import com.java3y.austin.common.pipeline.BusinessProcess;
+import com.java3y.austin.common.pipeline.ProcessContext;
 import com.java3y.austin.common.vo.BasicResultVO;
 import com.java3y.austin.service.api.domain.MessageParam;
 import com.java3y.austin.service.api.impl.domain.SendTaskModel;
-import com.java3y.austin.support.pipeline.BusinessProcess;
-import com.java3y.austin.support.pipeline.ProcessContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +41,7 @@ public class SendPreCheckAction implements BusinessProcess<SendTaskModel> {
 
         // 2. 过滤 receiver=null 的messageParam
         List<MessageParam> resultMessageParamList = messageParamList.stream()
-                .filter(messageParam -> !StrUtil.isBlank(messageParam.getReceiver()))
+                .filter(messageParam -> !CharSequenceUtil.isBlank(messageParam.getReceiver()))
                 .collect(Collectors.toList());
         if (CollUtil.isEmpty(resultMessageParamList)) {
             context.setNeedBreak(true).setResponse(BasicResultVO.fail(RespStatusEnum.CLIENT_BAD_PARAMETERS, "含接受者的参数列表为空"));
@@ -48,7 +49,7 @@ public class SendPreCheckAction implements BusinessProcess<SendTaskModel> {
         }
 
         // 3. 过滤 receiver 大于100的请求
-        if (resultMessageParamList.stream().anyMatch(messageParam -> messageParam.getReceiver().split(StrUtil.COMMA).length > AustinConstant.BATCH_RECEIVER_SIZE)) {
+        if (resultMessageParamList.stream().anyMatch(messageParam -> messageParam.getReceiver().split(StrPool.COMMA).length > AustinConstant.BATCH_RECEIVER_SIZE)) {
             context.setNeedBreak(true).setResponse(BasicResultVO.fail(RespStatusEnum.TOO_MANY_RECEIVER));
             return;
         }
