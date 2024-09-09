@@ -14,7 +14,6 @@ import com.java3y.austin.common.enums.ChannelType;
 import com.java3y.austin.handler.domain.sms.MessageTypeSmsConfig;
 import com.java3y.austin.handler.domain.sms.SmsParam;
 import com.java3y.austin.handler.handler.BaseHandler;
-import com.java3y.austin.handler.handler.Handler;
 import com.java3y.austin.handler.script.SmsScript;
 import com.java3y.austin.support.dao.SmsRecordDao;
 import com.java3y.austin.support.domain.SmsRecord;
@@ -25,10 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 /**
  * 短信发送处理
@@ -37,7 +36,7 @@ import java.util.Random;
  */
 @Component
 @Slf4j
-public class SmsHandler extends BaseHandler implements Handler {
+public class SmsHandler extends BaseHandler{
 
     /**
      * 流量自动分配策略
@@ -45,6 +44,11 @@ public class SmsHandler extends BaseHandler implements Handler {
     private static final Integer AUTO_FLOW_RULE = 0;
     private static final String FLOW_KEY = "msgTypeSmsConfig";
     private static final String FLOW_KEY_PREFIX = "message_type_";
+    /**
+     * 安全随机数，重用性能与随机数质量更高
+     */
+    private static final SecureRandom secureRandom = new SecureRandom();
+
     @Autowired
     private SmsRecordDao smsRecordDao;
     @Autowired
@@ -100,7 +104,7 @@ public class SmsHandler extends BaseHandler implements Handler {
         }
 
         // 生成一个随机数[1,total]，看落到哪个区间
-        int index = new Random().nextInt(total) + 1;
+        int index = secureRandom.nextInt(total) + 1;
 
         MessageTypeSmsConfig supplier = null;
         MessageTypeSmsConfig supplierBack = null;

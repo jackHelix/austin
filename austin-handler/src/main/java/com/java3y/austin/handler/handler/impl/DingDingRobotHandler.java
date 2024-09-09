@@ -16,7 +16,6 @@ import com.java3y.austin.common.enums.SendMessageType;
 import com.java3y.austin.handler.domain.dingding.DingDingRobotParam;
 import com.java3y.austin.handler.domain.dingding.DingDingRobotResult;
 import com.java3y.austin.handler.handler.BaseHandler;
-import com.java3y.austin.handler.handler.Handler;
 import com.java3y.austin.support.utils.AccountUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -37,7 +36,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class DingDingRobotHandler extends BaseHandler implements Handler {
+public class DingDingRobotHandler extends BaseHandler{
 
     @Autowired
     private AccountUtils accountUtils;
@@ -129,7 +128,7 @@ public class DingDingRobotHandler extends BaseHandler implements Handler {
             Mac mac = Mac.getInstance(CommonConstant.HMAC_SHA256_ENCRYPTION_ALGO);
             mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), CommonConstant.HMAC_SHA256_ENCRYPTION_ALGO));
             byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
-            sign = URLEncoder.encode(new String(Base64.encodeBase64(signData)), CommonConstant.CHARSET_NAME);
+            sign = URLEncoder.encode(new String(Base64.encodeBase64(signData), CommonConstant.CHARSET_UTF_8));
         } catch (Exception e) {
             log.error("DingDingHandler#assembleSign fail!:{}", Throwables.getStackTraceAsString(e));
         }

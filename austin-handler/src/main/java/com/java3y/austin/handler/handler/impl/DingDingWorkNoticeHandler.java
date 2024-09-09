@@ -9,7 +9,6 @@ import com.dingtalk.api.request.OapiMessageCorpconversationAsyncsendV2Request;
 import com.dingtalk.api.request.OapiMessageCorpconversationGetsendresultRequest;
 import com.dingtalk.api.request.OapiMessageCorpconversationRecallRequest;
 import com.dingtalk.api.response.OapiMessageCorpconversationAsyncsendV2Response;
-import com.dingtalk.api.response.OapiMessageCorpconversationGetsendresultResponse;
 import com.dingtalk.api.response.OapiMessageCorpconversationRecallResponse;
 import com.google.common.base.Throwables;
 import com.java3y.austin.common.constant.AustinConstant;
@@ -23,7 +22,6 @@ import com.java3y.austin.common.dto.model.DingDingWorkContentModel;
 import com.java3y.austin.common.enums.ChannelType;
 import com.java3y.austin.common.enums.SendMessageType;
 import com.java3y.austin.handler.handler.BaseHandler;
-import com.java3y.austin.handler.handler.Handler;
 import com.java3y.austin.support.config.SupportThreadPoolConfig;
 import com.java3y.austin.support.utils.AccessTokenUtils;
 import com.java3y.austin.support.utils.AccountUtils;
@@ -44,7 +42,7 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-public class DingDingWorkNoticeHandler extends BaseHandler implements Handler {
+public class DingDingWorkNoticeHandler extends BaseHandler{
 
 
     private static final String DING_DING_RECALL_KEY_PREFIX = "DING_RECALL_";
@@ -180,7 +178,7 @@ public class DingDingWorkNoticeHandler extends BaseHandler implements Handler {
             OapiMessageCorpconversationGetsendresultRequest req = new OapiMessageCorpconversationGetsendresultRequest();
             req.setAgentId(Long.valueOf(account.getAgentId()));
             req.setTaskId(456L);
-            OapiMessageCorpconversationGetsendresultResponse rsp = client.execute(req, accessToken);
+            client.execute(req, accessToken);
         } catch (Exception e) {
             log.error("DingDingWorkNoticeHandler#pull fail:{}", Throwables.getStackTraceAsString(e));
         }
