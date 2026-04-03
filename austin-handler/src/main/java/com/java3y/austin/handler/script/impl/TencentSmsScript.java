@@ -4,7 +4,7 @@ import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.IdUtil;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.google.common.base.Throwables;
 import com.java3y.austin.common.dto.account.sms.TencentSmsAccount;
 import com.java3y.austin.common.enums.SmsStatus;
@@ -152,7 +152,7 @@ public class TencentSmsScript implements SmsScript {
      */
     private List<SmsRecord> assemblePullSmsRecord(TencentSmsAccount account, PullSmsSendStatusResponse resp) {
         List<SmsRecord> smsRecordList = new ArrayList<>();
-        if (Objects.nonNull(resp) && Objects.nonNull(resp.getPullSmsSendStatusSet()) && resp.getPullSmsSendStatusSet().length > 0) {
+        if (Objects.nonNull(resp) && Objects.nonNull(resp.getPullSmsSendStatusSet())) {
             for (PullSmsSendStatus pullSmsSendStatus : resp.getPullSmsSendStatusSet()) {
                 SmsRecord smsRecord = SmsRecord.builder()
                         .sendDate(Integer.valueOf(DateUtil.format(new Date(), DatePattern.PURE_DATE_PATTERN)))

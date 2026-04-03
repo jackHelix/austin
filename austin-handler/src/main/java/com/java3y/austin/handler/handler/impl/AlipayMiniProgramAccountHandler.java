@@ -1,7 +1,7 @@
 package com.java3y.austin.handler.handler.impl;
 
 import cn.hutool.json.JSONUtil;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.domain.AlipayOpenAppMiniTemplatemessageSendModel;
 import com.alipay.api.request.AlipayOpenAppMiniTemplatemessageSendRequest;
@@ -67,7 +67,7 @@ public class AlipayMiniProgramAccountHandler extends BaseHandler{
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> {
-                            Map<String, String> valueMap = new HashMap<>();
+                            Map<String, String> valueMap = new HashMap<>(1);
                             valueMap.put("value", entry.getValue());
                             return valueMap;
                         }

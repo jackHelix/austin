@@ -1,8 +1,8 @@
 package com.java3y.austin.service.api.impl.action.send;
 
 import cn.hutool.core.collection.CollUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import com.google.common.base.Throwables;
 import com.java3y.austin.common.domain.SimpleTaskInfo;
 import com.java3y.austin.common.domain.TaskInfo;
@@ -47,7 +47,7 @@ public class SendMqAction implements BusinessProcess<SendTaskModel> {
         SendTaskModel sendTaskModel = context.getProcessModel();
         List<TaskInfo> taskInfo = sendTaskModel.getTaskInfo();
         try {
-            String message = JSON.toJSONString(sendTaskModel.getTaskInfo(), new SerializerFeature[]{SerializerFeature.WriteClassName});
+            String message = JSON.toJSONString(sendTaskModel.getTaskInfo(), JSONWriter.Feature.WriteClassName);
             sendMqService.send(sendMessageTopic, message, tagId);
 
             context.setResponse(BasicResultVO.success(taskInfo.stream().map(v -> SimpleTaskInfo.builder().businessId(v.getBusinessId()).messageId(v.getMessageId()).bizId(v.getBizId()).build()).collect(Collectors.toList())));

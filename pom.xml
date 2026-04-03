@@ -46,7 +46,7 @@
         <hutool-all.version>5.7.15</hutool-all.version>
         <guava.version>31.0.1-jre</guava.version>
         <okhttp.version>4.9.2</okhttp.version>
-        <fastjson.version>1.2.83</fastjson.version>
+        <fastjson2.version>2.0.60</fastjson2.version>
         <tencentcloud-sdk-java.version>3.1.510</tencentcloud-sdk-java.version>
         <nacos-config-spring-boot-starter.version>0.2.12</nacos-config-spring-boot-starter.version>
         <apollo-client.version>2.1.0</apollo-client.version>
@@ -146,11 +146,17 @@
                 <version>${okhttp.version}</version>
             </dependency>
 
-            <!--fastjson包-->
+            <!--fastjson2-->
             <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson.version}</version>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+            <!--fastjson2 spring/web 扩展-->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2-extension</artifactId>
+                <version>${fastjson2.version}</version>
             </dependency>
 
             <!--腾讯sdk(目前用在短信上)-->

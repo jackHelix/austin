@@ -3,7 +3,7 @@ package com.java3y.austin.handler.handler.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.StrPool;
 import cn.hutool.http.HttpUtil;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.google.common.base.Throwables;
 import com.java3y.austin.common.constant.AustinConstant;
 import com.java3y.austin.common.constant.CommonConstant;
@@ -128,7 +128,7 @@ public class DingDingRobotHandler extends BaseHandler{
             Mac mac = Mac.getInstance(CommonConstant.HMAC_SHA256_ENCRYPTION_ALGO);
             mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), CommonConstant.HMAC_SHA256_ENCRYPTION_ALGO));
             byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
-            sign = URLEncoder.encode(new String(Base64.encodeBase64(signData), CommonConstant.CHARSET_UTF_8));
+            sign = URLEncoder.encode(new String(Base64.encodeBase64(signData), StandardCharsets.UTF_8), CommonConstant.CHARSET_UTF_8);
         } catch (Exception e) {
             log.error("DingDingHandler#assembleSign fail!:{}", Throwables.getStackTraceAsString(e));
         }

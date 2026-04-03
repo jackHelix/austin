@@ -1,7 +1,7 @@
 package com.java3y.austin.handler.deduplication.build;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.java3y.austin.common.domain.TaskInfo;
 import com.java3y.austin.handler.deduplication.DeduplicationHolder;
 import com.java3y.austin.handler.deduplication.DeduplicationParam;

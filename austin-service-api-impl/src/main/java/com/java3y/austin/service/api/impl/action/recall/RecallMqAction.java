@@ -1,7 +1,7 @@
 package com.java3y.austin.service.api.impl.action.recall;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import com.google.common.base.Throwables;
 import com.java3y.austin.common.domain.RecallTaskInfo;
 import com.java3y.austin.common.enums.RespStatusEnum;
@@ -37,7 +37,7 @@ public class RecallMqAction implements BusinessProcess<RecallTaskModel> {
     public void process(ProcessContext<RecallTaskModel> context) {
         RecallTaskInfo recallTaskInfo = context.getProcessModel().getRecallTaskInfo();
         try {
-            String message = JSON.toJSONString(recallTaskInfo, new SerializerFeature[]{SerializerFeature.WriteClassName});
+            String message = JSON.toJSONString(recallTaskInfo, JSONWriter.Feature.WriteClassName);
             sendMqService.send(austinRecall, message, tagId);
         } catch (Exception e) {
             context.setNeedBreak(true).setResponse(BasicResultVO.fail(RespStatusEnum.SERVICE_ERROR));

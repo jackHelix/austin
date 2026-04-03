@@ -1,6 +1,6 @@
 package com.java3y.austin.support.mq.eventbus;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.google.common.eventbus.EventBus;
 import com.java3y.austin.common.domain.RecallTaskInfo;
 import com.java3y.austin.common.domain.TaskInfo;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 @Service
 @ConditionalOnProperty(name = "austin.mq.pipeline", havingValue = MessageQueuePipeline.EVENT_BUS)
 public class EventBusSendMqServiceImpl implements SendMqService {
-    private EventBus eventBus = new EventBus();
+    private final EventBus eventBus = new EventBus();
 
     @Autowired
     private EventBusListener eventBusListener;

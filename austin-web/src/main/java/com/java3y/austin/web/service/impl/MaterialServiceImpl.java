@@ -3,7 +3,7 @@ package com.java3y.austin.web.service.impl;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpRequest;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.dingtalk.api.DefaultDingTalkClient;
 import com.dingtalk.api.DingTalkClient;
 import com.dingtalk.api.request.OapiMediaUploadRequest;
@@ -55,7 +55,7 @@ public class MaterialServiceImpl implements MaterialService {
             String accessToken = accessTokenUtils.getAccessToken(ChannelType.DING_DING_WORK_NOTICE.getCode(), Integer.valueOf(sendAccount), account, false);
             DingTalkClient client = new DefaultDingTalkClient(SendChanelUrlConstant.DING_DING_UPLOAD_URL);
             OapiMediaUploadRequest req = new OapiMediaUploadRequest();
-            FileItem item = new FileItem(new StringBuilder().append(IdUtil.fastSimpleUUID()).append(file.getOriginalFilename()).toString(),
+            FileItem item = new FileItem(IdUtil.fastSimpleUUID() + file.getOriginalFilename(),
                     file.getInputStream());
             req.setMedia(item);
             req.setType(EnumUtil.getDescriptionByCode(Integer.valueOf(fileType), FileType.class));
